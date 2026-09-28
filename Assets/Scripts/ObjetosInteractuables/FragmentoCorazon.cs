@@ -1,8 +1,9 @@
+using Assets.Scripts.ScriptDani.Control_Central_Y_Estados;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class FragmentoCorazon : MonoBehaviour,IInteractable
+public class FragmentoCorazon : MonoBehaviour, IObjetoLevantable
 {
     public GameObject cartelUI;
     public void Interactuar(ControladorPersonaje jugador)

@@ -1,8 +1,9 @@
+using Assets.Scripts.ScriptDani.Control_Central_Y_Estados;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BateriaLinterna : MonoBehaviour,IInteractable
+public class BateriaLinterna : MonoBehaviour, IObjetoLevantable
 {
     public float cantidadRecarga = 50f;
     public GameObject cartelUI;
