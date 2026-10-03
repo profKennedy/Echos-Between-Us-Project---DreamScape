@@ -1,7 +1,8 @@
+using Assets.Scripts.ScriptDani.Control_Central_Y_Estados;
 using System.Collections;
 using UnityEngine;
 
-public class GestionLinterna : MonoBehaviour, IInteractable
+public class GestionLinterna : MonoBehaviour, IObjetoLevantable
 {
     public ControladorLinterna linterna;
     private bool linternaEnSuelo = true; // Por defecto en el suelo (Nivel 1)

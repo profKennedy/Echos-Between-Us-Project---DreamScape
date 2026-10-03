@@ -22,14 +22,16 @@ public class ControladorAnimacionesDani : MonoBehaviour
     private static readonly int EnSigilo = Animator.StringToHash("EnSigilo");
     private static readonly int EstaSaltando = Animator.StringToHash("EstaSaltando");
     private static readonly int EstaAsustada = Animator.StringToHash("EstaAsustada");
+    private static readonly int Recoger= Animator.StringToHash("Recoger");
 
     private bool _estabaEnSuelo = true;
-
+    private InteraccionPersonaje _interaccion;
     private void Awake()
     {
         _animator = GetComponentInChildren<Animator>();
         _controlador = GetComponent<ControladorPersonaje>();
         _movimiento = GetComponent<MovimientoPersonaje>();
+        _interaccion = GetComponent<InteraccionPersonaje>();
 
         if (audioSourcePasos == null) audioSourcePasos = GetComponent<AudioSource>();
         if (audioSourceSfx == null) audioSourceSfx = audioSourcePasos;
@@ -38,11 +40,13 @@ public class ControladorAnimacionesDani : MonoBehaviour
     private void OnEnable()
     {
         _controlador.OnEstadoCambiado += AlCambiarEstado;
+        _interaccion.OnLevantarObjeto += ReproducirAnimacionRecoger;
     }
 
     private void OnDisable()
     {
         _controlador.OnEstadoCambiado -= AlCambiarEstado;
+        _interaccion.OnLevantarObjeto -= ReproducirAnimacionRecoger;
     }
 
     private void Update()
@@ -85,7 +89,10 @@ public class ControladorAnimacionesDani : MonoBehaviour
         }
         _estabaEnSuelo = enSuelo;
     }
-
+    private void ReproducirAnimacionRecoger()
+    {
+        _animator.SetTrigger(Recoger);
+    }
     private void AlCambiarEstado(EstadoPersonaje nuevoEstado)
     {
         // Resetear todo primero

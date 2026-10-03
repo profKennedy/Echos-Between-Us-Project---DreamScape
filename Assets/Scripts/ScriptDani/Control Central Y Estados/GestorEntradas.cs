@@ -19,7 +19,7 @@ public class GestorEntradas : MonoBehaviour
     {
         entradaMovimiento = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
         AlMoverse?.Invoke(entradaMovimiento);
-        if (entradaMovimiento != Vector2.zero) AlMoverse?.Invoke(entradaMovimiento);
+        //if (entradaMovimiento != Vector2.zero) AlMoverse?.Invoke(entradaMovimiento);
 
         if (Input.GetKeyDown(KeyCode.LeftShift)) AlAlternarSigilo?.Invoke(true);
         if (Input.GetKeyUp(KeyCode.LeftShift)) AlAlternarSigilo?.Invoke(false);

@@ -17,17 +17,19 @@ public class EfectoEncogimiento : MonoBehaviour
 
     private float _alturaOriginal;
     private float _radioOriginal;
-
+    private Vector3 _centroOriginal;
     private bool _yaSono = false;
 
+    private NivelDeAutoestima _nivelAutoestimaDani;
     private void Awake()
     {
         if (capsule != null)
         {
             _alturaOriginal = capsule.height;
             _radioOriginal = capsule.radius;
+            _centroOriginal = capsule.center;
         }
-
+        _nivelAutoestimaDani = GetComponent<NivelDeAutoestima>();
         if (audioSource == null) audioSource = GetComponent<AudioSource>();
     }
     private void Update()
@@ -52,8 +54,25 @@ public class EfectoEncogimiento : MonoBehaviour
         {
             capsule.height = _alturaOriginal * factorEncogimientoActual;
             capsule.radius = _radioOriginal * factorEncogimientoActual;
+            capsule.center = _centroOriginal * factorEncogimientoActual;
         }
     }
+
+
+    private void OnEnable()
+    {
+        _nivelAutoestimaDani.OnAutoestimaCambiada += ActualizarTamaño;
+    }
+    private void OnDisable()
+    {
+        _nivelAutoestimaDani.OnAutoestimaCambiada -= ActualizarTamaño;
+    }
+
+    private void ActualizarTamaño(float porcentajeAutoestima)
+    {
+        factorObjetivo= Mathf.Lerp(factorMinimo, 1f, porcentajeAutoestima);
+    }
+
     // Llamado por ReceptorMiradaFantasma cada frame que la miran
     public void AplicarPresion(float nivelNegatividad)
     {
