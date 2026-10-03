@@ -12,30 +12,23 @@ public class ReceptorMiradaFantasma : MonoBehaviour
     private EfectoEncogimiento _encogimiento;
     private bool _siendoMirada = false;
 
+
+    private NivelDeAutoestima _nivelAutoestimaDani;
     private void Awake()
     {
         _controlador = GetComponentInParent<ControladorPersonaje>();
-        _encogimiento = GetComponentInParent<EfectoEncogimiento>();
+        _nivelAutoestimaDani = GetComponentInParent<NivelDeAutoestima>();
     }
 
     private void Update()
     {
         if (_siendoMirada)
         {
-            _encogimiento.AplicarPresion(
-                _encogimiento.ObtenerFactorActual() - nivelNegatividadPorSegundo * Time.deltaTime
-                    < 0 ? 1f : 1f - (1f - _encogimiento.ObtenerFactorActual() + nivelNegatividadPorSegundo * Time.deltaTime)
-            );
-
-            // Si encogió demasiado, asustar
-            if (_encogimiento.ObtenerFactorActual() <= umbralParaAsustar)
-            {
-                _controlador.AlSerAsustada();
-            }
+            _nivelAutoestimaDani.ReducirAutoestima(15f*Time.deltaTime);
         }
         else
         {
-            _encogimiento.IniciarRecuperacion();
+            _nivelAutoestimaDani.RecuperarAutoestima(5f*Time.deltaTime);
         }
 
         _siendoMirada = false; 

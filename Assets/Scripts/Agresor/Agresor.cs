@@ -39,6 +39,7 @@ public class Agresor : MonoBehaviour, IAgresor
     private float timerRepelido = 0f;
     [SerializeField] private float duracionRepelido = 3f;
 
+    private ReceptorMiradaFantasma receptorDani; // Referencia al receptor de mirada del jugador,Lo agregue yo (Maci)
     // -------------------------------------------------------
     // EVENTOS
     // -------------------------------------------------------
@@ -55,7 +56,10 @@ public class Agresor : MonoBehaviour, IAgresor
 
         ControladorPersonaje jugador = FindFirstObjectByType<ControladorPersonaje>();
         if (jugador != null)
+        {
             objetivoJugador = jugador.transform;
+            receptorDani = jugador.GetComponentInChildren<ReceptorMiradaFantasma>();//ESto tambien lo agregue yo es para que pueda encoger a dani(maci)
+        }
         else
             Debug.LogWarning("Agresor: No se encontró ControladorPersonaje en la escena.");
 
@@ -66,6 +70,7 @@ public class Agresor : MonoBehaviour, IAgresor
     {
         if (objetivoJugador == null) return;
         ActualizarComportamiento();
+        AplicarEfectoMirada(); //maci otra vez
     }
 
     // -------------------------------------------------------
@@ -155,6 +160,21 @@ public class Agresor : MonoBehaviour, IAgresor
     private void MoverHacia(Vector3 destino)
     {
         agente.SetDestination(destino);
+    }
+
+    //Esta funcion la hice para que funcione lo de las miradas(maci)
+    private void AplicarEfectoMirada()
+    {
+        if (!repelido)
+        {
+            if (DetectarJugador(objetivoJugador.position))
+            {
+                if (receptorDani != null)
+                {
+                    receptorDani.RecibirMirada();
+                }
+            }
+        }
     }
 
     // -------------------------------------------------------
