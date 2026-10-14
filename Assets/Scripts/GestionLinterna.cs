@@ -1,5 +1,4 @@
 using Assets.Scripts.ScriptDani.Control_Central_Y_Estados;
-using System.Collections;
 using UnityEngine;
 
 public class GestionLinterna : MonoBehaviour, IObjetoLevantable
@@ -9,12 +8,13 @@ public class GestionLinterna : MonoBehaviour, IObjetoLevantable
 
     public GameObject cartelUI; // Referencia al cartel de UI para mostrar la pista
     public Transform transformMano;
-    private Transform _padreOriginal;// para restaurar si la soltás
+    private Transform _padreOriginal; // para restaurar si la soltás
 
     private void Awake()
     {
         linterna = GetComponent<ControladorLinterna>();
     }
+
     public void EquiparLinterna()
     {
         linternaEnSuelo = false;
@@ -40,6 +40,9 @@ public class GestionLinterna : MonoBehaviour, IObjetoLevantable
 
     public void SoltarLinterna()
     {
+        // Si no la tiene en mano, no hay nada que soltar
+        if (linternaEnSuelo) return;
+
         linternaEnSuelo = true;
 
         // Desemparentás y restaurás físicas para que caiga
@@ -57,15 +60,19 @@ public class GestionLinterna : MonoBehaviour, IObjetoLevantable
 
     public void SoltarLinternaPorSusto()
     {
+        // Sin linterna en mano, el susto no le hace nada a la linterna
+        // (antes la pateaba del suelo aunque Dani ni la hubiera levantado)
+        if (linternaEnSuelo) return;
+
         SoltarLinterna();
 
         // Impulso aleatorio al soltar por susto
         if (linterna.TryGetComponent(out Rigidbody rb))
         {
             Vector3 impulso = new Vector3(
-                UnityEngine.Random.Range(-1f, 1f),
-                UnityEngine.Random.Range(0.5f, 1f),
-                UnityEngine.Random.Range(-1f, 1f)
+                Random.Range(-1f, 1f),
+                Random.Range(0.5f, 1f),
+                Random.Range(-1f, 1f)
             ).normalized * 3f;
             rb.AddForce(impulso, ForceMode.Impulse);
         }
@@ -93,13 +100,15 @@ public class GestionLinterna : MonoBehaviour, IObjetoLevantable
         transformMano = jugador.transformMano; // tomás la mano del jugador
         EquiparLinterna();
     }
+
     public void IntentarAlternarLuz()
     {
         if (linternaEnSuelo) return; // no hace nada si está suelta
         linterna.AlternarLuz();
     }
+
     public void MostrarPista(bool mostrar)
     {
-        cartelUI.SetActive(mostrar);
+        if (cartelUI != null) cartelUI.SetActive(mostrar);
     }
 }
