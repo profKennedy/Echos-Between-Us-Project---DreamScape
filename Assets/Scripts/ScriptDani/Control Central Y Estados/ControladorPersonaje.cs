@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -12,12 +11,13 @@ public class ControladorPersonaje : MonoBehaviour
     public EfectoEncogimiento efectoEncogimiento;
     public GestorEntradas entradas;
     public GestionLinterna gestionLinterna;
+    public MochilaDani mochila;
 
     public event Action OnPersonajeAsustado;
     public event Action<EstadoPersonaje> OnEstadoCambiado;
 
     [Space]
-    public Camera camaraFreeLook;
+    public Camera camaraFreeLook;   // Asignar la Main Camera (la que tiene el CinemachineBrain)
     public Transform transformMano;
 
     private ModoFreeLook _modoFreeLook;
@@ -60,16 +60,12 @@ public class ControladorPersonaje : MonoBehaviour
         entradas.AlAlternarSigilo -= OnSigiloInput;
     }
 
-    
-
     public void CambiarEstado(EstadoPersonaje nuevoEstado)
     {
         if (estado == nuevoEstado) return;
         estado = nuevoEstado;
         OnEstadoCambiado?.Invoke(estado);
     }
-
-   
 
     private void OnSigiloInput(bool activar)
     {
@@ -87,8 +83,6 @@ public class ControladorPersonaje : MonoBehaviour
         }
     }
 
-
-
     public void AlSerAsustada()
     {
         if (estado == EstadoPersonaje.EN_FLASHBACK) return;
@@ -97,17 +91,23 @@ public class ControladorPersonaje : MonoBehaviour
         _puedeAsustarse = false;
         CambiarEstado(EstadoPersonaje.ASUSTADA);
         movimiento.ActivarSigilo(false);
-        gestionLinterna.SoltarLinternaPorSusto();
+        if (gestionLinterna != null) gestionLinterna.SoltarLinternaPorSusto();
         OnPersonajeAsustado?.Invoke();
 
         StartCoroutine(RecuperarseDeSusto());
     }
+
     private IEnumerator RecuperarseDeSusto()
     {
         yield return new WaitForSeconds(_cooldownSusto);
         _puedeAsustarse = true;
-        CambiarEstado(EstadoPersonaje.LIBRE); // vuelve a LIBRE después del susto
+
+        // Solo volvemos a LIBRE si SEGUIMOS asustada. Si mientras tanto pasó otra cosa
+        // (flashback, respawn) no la pisamos.
+        if (estado == EstadoPersonaje.ASUSTADA)
+            CambiarEstado(EstadoPersonaje.LIBRE);
     }
+
     public void AlRecogerFragmento()
     {
         CambiarEstado(EstadoPersonaje.EN_FLASHBACK);
@@ -118,10 +118,12 @@ public class ControladorPersonaje : MonoBehaviour
     private IEnumerator IrAEscenaFin()
     {
         yield return new WaitForSeconds(1f);
-        SceneManager.LoadScene("FinDelJuego");  
+        SceneManager.LoadScene("FinDelJuego");
     }
-
 
     public void UsarCamaraFreeLook() => movimiento.modoActual = _modoFreeLook;
     public void UsarCamara2D() => movimiento.modoActual = _modo2D;
+
+    // Para tramos con riel: el eje lateral puede no ser el X global
+    public void UsarCamara2D(Vector3 ejeLateral) => movimiento.modoActual = new Modo2DLateral(ejeLateral);
 }

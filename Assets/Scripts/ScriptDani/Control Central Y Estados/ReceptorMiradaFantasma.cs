@@ -1,42 +1,38 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class ReceptorMiradaFantasma : MonoBehaviour
 {
     [Header("Configuración")]
-    public float nivelNegatividadPorSegundo = 0.3f;  // qué tan rápido se encoge
-    public float umbralParaAsustar = 0.5f;            // si el factor baja de esto, se asusta
-
-    private ControladorPersonaje _controlador;
-    private EfectoEncogimiento _encogimiento;
-    private bool _siendoMirada = false;
-
+    [SerializeField] private float perdidaPorSegundo = 15f;
+    [SerializeField] private float recuperacionPorSegundo = 5f;
+    [Tooltip("Cuánto tiempo sigue contando como 'mirada' después del último RecibirMirada()")]
+    [SerializeField] private float toleranciaMirada = 0.1f;
 
     private NivelDeAutoestima _nivelAutoestimaDani;
+    private float _tiempoUltimaMirada = float.NegativeInfinity;
+
     private void Awake()
     {
-        _controlador = GetComponentInParent<ControladorPersonaje>();
         _nivelAutoestimaDani = GetComponentInParent<NivelDeAutoestima>();
+        if (_nivelAutoestimaDani == null)
+            Debug.LogError("ReceptorMiradaFantasma: no encontré NivelDeAutoestima en el padre.", this);
     }
 
     private void Update()
     {
-        if (_siendoMirada)
-        {
-            _nivelAutoestimaDani.ReducirAutoestima(15f*Time.deltaTime);
-        }
-        else
-        {
-            _nivelAutoestimaDani.RecuperarAutoestima(5f*Time.deltaTime);
-        }
+        if (_nivelAutoestimaDani == null) return;
 
-        _siendoMirada = false; 
+        bool siendoMirada = Time.time - _tiempoUltimaMirada <= toleranciaMirada;
+
+        if (siendoMirada)
+            _nivelAutoestimaDani.ReducirAutoestima(perdidaPorSegundo * Time.deltaTime);
+        else
+            _nivelAutoestimaDani.RecuperarAutoestima(recuperacionPorSegundo * Time.deltaTime);
     }
 
-    // Los fantasmas llaman esto con su Raycast
+    // Los fantasmas llaman esto con su Raycast (en Update o FixedUpdate, da igual)
     public void RecibirMirada()
     {
-        _siendoMirada = true;
+        _tiempoUltimaMirada = Time.time;
     }
 }

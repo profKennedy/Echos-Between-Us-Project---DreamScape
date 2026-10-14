@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 6365886474396984854}
   - component: {fileID: 95222942646232511}
   - component: {fileID: 2289052790040320346}
-  - component: {fileID: 7304617603567873675}
+  - component: {fileID: -7082086066604851671}
   m_Layer: 6
   m_Name: Bateria
   m_TagString: Untagged
@@ -157,7 +157,7 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 112
   m_CollisionDetection: 0
---- !u!114 &7304617603567873675
+--- !u!114 &-7082086066604851671
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -166,11 +166,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 4374334025266265483}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 03b1134f322234045aa5ce5008df844a, type: 3}
+  m_Script: {fileID: 11500000, guid: fa05bb2d5707691469f5e08aa4acaeaf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cantidadRecarga: 50
-  cartelUI: {fileID: 9054716784442000354}
+  datos: {fileID: 11400000, guid: 646e8178f4eb57542b897a5eb185a92c, type: 2}
+  cartelUI: {fileID: 0}
 --- !u!1 &8469056172380263637
 GameObject:
   m_ObjectHideFlags: 0

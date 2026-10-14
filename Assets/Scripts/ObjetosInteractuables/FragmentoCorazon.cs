@@ -1,21 +1,23 @@
 using Assets.Scripts.ScriptDani.Control_Central_Y_Estados;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class FragmentoCorazon : MonoBehaviour, IObjetoLevantable
 {
-    public GameObject cartelUI;
+    // Mismo nombre que antes: la referencia del Inspector se conserva
+    [SerializeField] private GameObject cartelUI;
+
     public void Interactuar(ControladorPersonaje jugador)
     {
-        Debug.Log("¡Fragmento del corazón recogido! Fin del nivel.");
+        MostrarPista(false);
         gameObject.SetActive(false);
 
-        // ponytail: llamar al gestor de escena cuando esté implementado
-        // GestorJuego.Instancia.TerminarNivel();
+        // Un solo camino para terminar el nivel: el personaje entra en flashback,
+        // se bloquea y carga la escena final.
+        jugador.AlRecogerFragmento();
     }
+
     public void MostrarPista(bool mostrar)
     {
-        cartelUI.SetActive(mostrar);
+        if (cartelUI != null) cartelUI.SetActive(mostrar);
     }
 }

@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class MovimientoPersonaje : MonoBehaviour
@@ -15,15 +13,16 @@ public class MovimientoPersonaje : MonoBehaviour
 
     public IModoMovimiento modoActual;
 
+    private const float MultiplicadorSigilo = 0.5f;
+
     private Vector2 _inputMovimiento;
     private bool _bloqueado = false;
+    private float _factorEncogimiento = 1f;
     private CapsuleCollider _capsule;
-    private Transform _camaraTransform;
 
     private void Awake()
     {
         _capsule = GetComponent<CapsuleCollider>();
-        _camaraTransform = Camera.main.transform; // Referencia directa a la cámara
     }
 
     public void Mover(Vector2 dir)
@@ -35,58 +34,65 @@ public class MovimientoPersonaje : MonoBehaviour
     {
         if (_bloqueado) return;
 
-        // Verificamos si hay movimiento significativo
-        if (_inputMovimiento.sqrMagnitude > 0.01f)
+        // El MODO decide la dirección (3D relativa a cámara, 2D lateral, etc.).
+        // MovimientoPersonaje no necesita saber cuál es: eso es el patrón Strategy.
+        Vector3 direccion = Vector3.zero;
+        if (_inputMovimiento.sqrMagnitude > 0.01f && modoActual != null)
         {
-            Vector3 direccionMovimiento = Vector3.zero;
-
-            // Verificamos si estamos en tercera persona
-            if (modoActual is ModoFreeLook)
-            {
-                // LA MAGIA MATEMÁTICA ABSOLUTA:
-                // Mathf.Atan2 nos da el ángulo de tu joystick/teclado.
-                // Al sumarle _camaraTransform.eulerAngles.y, ignoramos por completo el balanceo y el lag de Cinemachine.
-                float anguloObjetivo = Mathf.Atan2(_inputMovimiento.x, _inputMovimiento.y) * Mathf.Rad2Deg + _camaraTransform.eulerAngles.y;
-
-                // Convertimos ese ángulo perfecto en una dirección 3D plana
-                direccionMovimiento = Quaternion.Euler(0f, anguloObjetivo, 0f) * Vector3.forward;
-            }
-            else if (modoActual != null)
-            {
-                // Modo 2D u otros: usa tu interfaz clásica pero aplanando la Y
-                Vector3 dirCamara = modoActual.CalcularDireccion(_inputMovimiento);
-                direccionMovimiento = new Vector3(dirCamara.x, 0f, dirCamara.z).normalized;
-            }
-
-            // 1. Aplicamos la velocidad limpia
-            rb.velocity = new Vector3(
-                direccionMovimiento.x * velocidadActual,
-                rb.velocity.y, // Respetamos la gravedad
-                direccionMovimiento.z * velocidadActual
-            );
-
-            // 2. Rotamos a Dany hacia la dirección del movimiento
-            Quaternion rotacionDeseada = Quaternion.LookRotation(direccionMovimiento);
-            rb.MoveRotation(Quaternion.Slerp(rb.rotation, rotacionDeseada, Time.fixedDeltaTime * velocidadRotacion));
+            direccion = modoActual.CalcularDireccion(_inputMovimiento);
+            direccion.y = 0f;
         }
-        else
+
+        // Sin input, o sin dirección válida (ej: solo input vertical en modo 2D): frenar
+        if (direccion.sqrMagnitude < 0.0001f)
         {
-            // Frena al personaje inmediatamente sin deslizarse por el piso
             rb.velocity = new Vector3(0f, rb.velocity.y, 0f);
+            return;
         }
+
+        direccion.Normalize();
+
+        rb.velocity = new Vector3(
+            direccion.x * velocidadActual,
+            rb.velocity.y, // Respetamos la gravedad
+            direccion.z * velocidadActual
+        );
+
+        Quaternion rotacionDeseada = Quaternion.LookRotation(direccion);
+        rb.MoveRotation(Quaternion.Slerp(rb.rotation, rotacionDeseada, Time.fixedDeltaTime * velocidadRotacion));
     }
 
-    public void Bloquear(bool valor) => _bloqueado = valor;
+    public void Bloquear(bool valor)
+    {
+        _bloqueado = valor;
+        // Si bloqueamos, frenamos: si no, el Rigidbody sigue deslizando con la última velocidad
+        if (valor) rb.velocity = new Vector3(0f, rb.velocity.y, 0f);
+    }
 
     public void Saltar() { if (EstaEnSuelo()) rb.AddForce(Vector3.up * fuerzaSaltoActual, ForceMode.Impulse); }
 
     public void ActivarSigilo(bool activo)
     {
         enSigilo = activo;
-        velocidadActual = activo ? velocidadBase * 0.5f : velocidadBase;
+        ActualizarVelocidad();
     }
 
-    public void AplicarModificadoresEncogimiento(float factor) => velocidadActual = velocidadBase * factor;
+    public void AplicarModificadoresEncogimiento(float factor)
+    {
+        _factorEncogimiento = factor;
+        ActualizarVelocidad();
+    }
+
+    // UN solo lugar calcula la velocidad.
+    // Regla: el sigilo es el TOPE. Si el encogimiento ya la dejó más lenta que el sigilo, se queda esa.
+    private void ActualizarVelocidad()
+    {
+        float factor = enSigilo
+            ? Mathf.Min(_factorEncogimiento, MultiplicadorSigilo)
+            : _factorEncogimiento;
+
+        velocidadActual = velocidadBase * factor;
+    }
 
     public bool EstaEnSuelo()
     {

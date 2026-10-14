@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class ControladorAnimacionesDani : MonoBehaviour
@@ -7,6 +5,7 @@ public class ControladorAnimacionesDani : MonoBehaviour
     private Animator _animator;
     private ControladorPersonaje _controlador;
     private MovimientoPersonaje _movimiento;
+    private InteraccionPersonaje _interaccion;
 
     [SerializeField] private AudioSource audioSourcePasos;
     [SerializeField] private AudioSource audioSourceLatidos;
@@ -17,15 +16,17 @@ public class ControladorAnimacionesDani : MonoBehaviour
     [SerializeField] private AudioClip salto;
     [SerializeField] private AudioClip latido;
 
+    private const float UmbralMovimiento = 0.1f;
+
     // Hashes son más performantes que strings
     private static readonly int EstaCorriendo = Animator.StringToHash("EstaCorriendo");
     private static readonly int EnSigilo = Animator.StringToHash("EnSigilo");
     private static readonly int EstaSaltando = Animator.StringToHash("EstaSaltando");
     private static readonly int EstaAsustada = Animator.StringToHash("EstaAsustada");
-    private static readonly int Recoger= Animator.StringToHash("Recoger");
+    private static readonly int Recoger = Animator.StringToHash("Recoger");
 
     private bool _estabaEnSuelo = true;
-    private InteraccionPersonaje _interaccion;
+
     private void Awake()
     {
         _animator = GetComponentInChildren<Animator>();
@@ -51,21 +52,30 @@ public class ControladorAnimacionesDani : MonoBehaviour
 
     private void Update()
     {
-        // Correr: si la velocidad horizontal es mayor a un umbral
         float velocidadHorizontal = new Vector2(
             _movimiento.rb.velocity.x,
             _movimiento.rb.velocity.z
         ).magnitude;
 
-        bool enMovimiento = velocidadHorizontal > 0.1f;
+        bool enMovimiento = velocidadHorizontal > UmbralMovimiento;
+
+        // UNA sola consulta de suelo por frame (antes eran dos SphereCast), reutilizada abajo
         bool enSuelo = _movimiento.EstaEnSuelo();
 
-        _animator.SetInteger(EstaCorriendo, velocidadHorizontal > 0.1f ? 1 : 0);
+        _animator.SetInteger(EstaCorriendo, enMovimiento ? 1 : 0);
+        _animator.SetBool(EstaSaltando, !enSuelo);
 
-        // Saltar: si no está en el suelo
-        _animator.SetBool(EstaSaltando, !_movimiento.EstaEnSuelo());
+        ActualizarAudioPasos(enMovimiento, enSuelo);
 
-        // AUDIO
+        if (_estabaEnSuelo && !enSuelo && audioSourceSfx != null && salto != null)
+            audioSourceSfx.PlayOneShot(salto);
+
+        _estabaEnSuelo = enSuelo;
+    }
+
+    private void ActualizarAudioPasos(bool enMovimiento, bool enSuelo)
+    {
+        if (audioSourcePasos == null) return;
 
         if (enMovimiento && enSuelo)
         {
@@ -82,17 +92,13 @@ public class ControladorAnimacionesDani : MonoBehaviour
         {
             audioSourcePasos.Stop();
         }
-
-        if (_estabaEnSuelo && !enSuelo)
-        {
-            if (audioSourceSfx != null && salto != null) audioSourceSfx.PlayOneShot(salto);
-        }
-        _estabaEnSuelo = enSuelo;
     }
+
     private void ReproducirAnimacionRecoger()
     {
         _animator.SetTrigger(Recoger);
     }
+
     private void AlCambiarEstado(EstadoPersonaje nuevoEstado)
     {
         // Resetear todo primero
@@ -116,7 +122,6 @@ public class ControladorAnimacionesDani : MonoBehaviour
                     audioSourceLatidos.loop = true;
                     audioSourceLatidos.Play();
                 }
-
                 break;
 
             case EstadoPersonaje.LIBRE:

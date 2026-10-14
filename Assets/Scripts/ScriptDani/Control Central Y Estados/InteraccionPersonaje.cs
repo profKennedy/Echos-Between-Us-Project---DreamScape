@@ -1,13 +1,14 @@
 using Assets.Scripts.ScriptDani.Control_Central_Y_Estados;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class InteraccionPersonaje : MonoBehaviour
 {
     public float radioDeteccion = 2f;
     public LayerMask layerInteractuable;
+
+    // Buffer reutilizable: OverlapSphere (sin NonAlloc) crea un array nuevo cada frame
+    private readonly Collider[] _hits = new Collider[8];
 
     private IInteractable _objetoCercanoActual;
 
@@ -16,47 +17,81 @@ public class InteraccionPersonaje : MonoBehaviour
     private ControladorPersonaje _jugador;
 
     public event Action OnLevantarObjeto;
+
+    private void Awake()
+    {
+        _jugador = GetComponent<ControladorPersonaje>();
+    }
+
     private void Update()
     {
-        Collider[] hits = Physics.OverlapSphere(transform.position, radioDeteccion, layerInteractuable);
+        // Si el objeto fue destruido (Destroy), la referencia a la interfaz NO es null de C#
+        if (!EstaVivo(_objetoCercanoActual)) _objetoCercanoActual = null;
 
-        IInteractable nuevo = hits.Length > 0 && hits[0].TryGetComponent(out IInteractable t) ? t : null;
+        IInteractable nuevo = BuscarMasCercano();
 
-        // Si cambió el objeto cercano, actualizás los carteles
         if (nuevo != _objetoCercanoActual)
         {
-            _objetoCercanoActual?.MostrarPista(false); // oculta el anterior
-            nuevo?.MostrarPista(true);                 // muestra el nuevo
+            _objetoCercanoActual?.MostrarPista(false);
+            nuevo?.MostrarPista(true);
             _objetoCercanoActual = nuevo;
         }
     }
 
+    private IInteractable BuscarMasCercano()
+    {
+        int cantidad = Physics.OverlapSphereNonAlloc(transform.position, radioDeteccion, _hits, layerInteractuable);
+
+        IInteractable mejor = null;
+        float mejorDistancia = float.MaxValue;
+
+        for (int i = 0; i < cantidad; i++)
+        {
+            if (!_hits[i].TryGetComponent(out IInteractable candidato)) continue;
+
+            float distancia = (_hits[i].transform.position - transform.position).sqrMagnitude;
+            if (distancia < mejorDistancia)
+            {
+                mejorDistancia = distancia;
+                mejor = candidato;
+            }
+        }
+
+        return mejor;
+    }
+
+    // Un MonoBehaviour destruido sigue siendo != null para C# cuando lo mirás como interfaz.
+    private static bool EstaVivo(IInteractable interactable)
+    {
+        if (interactable == null) return false;
+        return !(interactable is UnityEngine.Object objeto) || objeto != null;
+    }
+
     public void IntentarInteractuar()
     {
-        if (_objetoCercanoActual == null)
-            return;
+        if (!EstaVivo(_objetoCercanoActual)) return;
 
-        _jugador = GetComponent<ControladorPersonaje>();
-
-        // Si es un objeto que se levanta,
-        // primero hacemos la animación.
+        // Si es un objeto que se levanta, primero hacemos la animación.
         if (_objetoCercanoActual is IObjetoLevantable)
         {
             _interaccionPendiente = _objetoCercanoActual;
-
             OnLevantarObjeto?.Invoke();
-
             return;
         }
 
         // Cualquier otra interacción se ejecuta normalmente.
         _objetoCercanoActual.Interactuar(_jugador);
     }
+
+    // Se llama desde un Animation Event (ver nota sobre el Animator en un hijo)
     public void CompletarLevantamiento()
     {
         if (_interaccionPendiente == null) return;
-        _interaccionPendiente.Interactuar(_jugador);
-        _interaccionPendiente = null;
+
+        IInteractable pendiente = _interaccionPendiente;
+        _interaccionPendiente = null; // limpiar ANTES de ejecutar
+
+        if (EstaVivo(pendiente)) pendiente.Interactuar(_jugador);
     }
 
     public void PerderLinternaPorSusto() { } // ponytail: lógica omitida hasta linkear módulo Linterna.
