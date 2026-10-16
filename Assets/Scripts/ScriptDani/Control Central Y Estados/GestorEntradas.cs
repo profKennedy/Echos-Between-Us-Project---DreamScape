@@ -1,6 +1,5 @@
+
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class GestorEntradas : MonoBehaviour
@@ -13,24 +12,97 @@ public class GestorEntradas : MonoBehaviour
 
     public event Action<Vector2> AlMoverse;
     public event Action<bool> AlAlternarSigilo;
-    public event Action AlSaltar, AlInteractuar, AlAlternarLinterna, AlSoltarLinterna;
+    public event Action AlSaltar, AlInteractuar,
+        AlAlternarLinterna, AlSoltarLinterna;
+    private bool _sigiloMobileActivo = false;
+
+
+    // Movimiento recibido desde el joystick virtual.
+    private Vector2 _movimientoMobile;
+
+    // Indica si se están usando controles móviles.
+    [SerializeField] private bool usarControlesMobile = false;
 
     private void Update()
     {
-        entradaMovimiento = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
+        // Elegimos de dónde obtener el movimiento.
+        if (usarControlesMobile)
+        {
+            entradaMovimiento = _movimientoMobile;
+        }
+        else
+        {
+            entradaMovimiento = new Vector2(
+                Input.GetAxis("Horizontal"),
+                Input.GetAxis("Vertical")
+            );
+        }
+
+        // Enviamos el movimiento al personaje.
         AlMoverse?.Invoke(entradaMovimiento);
-        //if (entradaMovimiento != Vector2.zero) AlMoverse?.Invoke(entradaMovimiento);
 
-        if (Input.GetKeyDown(KeyCode.LeftShift)) AlAlternarSigilo?.Invoke(true);
-        if (Input.GetKeyUp(KeyCode.LeftShift)) AlAlternarSigilo?.Invoke(false);
+        // Entradas del teclado para PC.
+        if (!usarControlesMobile)
+        {
+            if (Input.GetKeyDown(KeyCode.LeftShift))
+                AlAlternarSigilo?.Invoke(true);
 
-        saltarPresionado = Input.GetButtonDown("Jump");
-        if (saltarPresionado) AlSaltar?.Invoke();
+            if (Input.GetKeyUp(KeyCode.LeftShift))
+                AlAlternarSigilo?.Invoke(false);
 
-        interactuarPresionado = Input.GetKeyDown(KeyCode.E);
-        if (interactuarPresionado) AlInteractuar?.Invoke();
+            saltarPresionado = Input.GetButtonDown("Jump");
+            if (saltarPresionado)
+                AlSaltar?.Invoke();
 
-        alternarLinternaPresionado = Input.GetKeyDown(KeyCode.F);
-        if (alternarLinternaPresionado) AlAlternarLinterna?.Invoke();
+            interactuarPresionado = Input.GetKeyDown(KeyCode.E);
+            if (interactuarPresionado)
+                AlInteractuar?.Invoke();
+
+            alternarLinternaPresionado = Input.GetKeyDown(KeyCode.F);
+            if (alternarLinternaPresionado)
+                AlAlternarLinterna?.Invoke();
+        }
+    }
+
+    // MÉTODOS PARA CONTROLES MÓVILES
+
+    public void EstablecerMovimientoMobile(Vector2 direccion)
+    {
+        _movimientoMobile = Vector2.ClampMagnitude(direccion, 1f);
+    }
+
+    public void SaltarMobile()
+    {
+        AlSaltar?.Invoke();
+    }
+
+    public void InteractuarMobile()
+    {
+        AlInteractuar?.Invoke();
+    }
+
+    public void AlternarLinternaMobile()
+    {
+        AlAlternarLinterna?.Invoke();
+    }
+
+    public void AlternarSigiloMobile()
+    {
+        _sigiloMobileActivo = !_sigiloMobileActivo;
+        AlAlternarSigilo?.Invoke(_sigiloMobileActivo);
+    }
+
+    public void DesactivarSigiloMobile()
+    {
+        AlAlternarSigilo?.Invoke(false);
+    }
+
+    private void Awake()
+    {
+    #if UNITY_ANDROID && !UNITY_EDITOR
+        usarControlesMobile = true;
+    #else
+            usarControlesMobile = false;
+    #endif
     }
 }

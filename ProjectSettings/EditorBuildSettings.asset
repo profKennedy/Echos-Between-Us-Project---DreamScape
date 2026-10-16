@@ -14,8 +14,11 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/Linterna y Sombras.unity
     guid: c3c9d430c7d70f34fa8d8b637140c9a7
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Niveles/Nivel_1.unity
     guid: 9f4f5e7b16a52214d963616134b56b36
+  - enabled: 1
+    path: Assets/Scenes/EscenaVerticalSlice.unity
+    guid: 085ec45ffa5fa4447b72fc68a166b2ec
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0
