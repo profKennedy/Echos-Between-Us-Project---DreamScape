@@ -1,3 +1,4 @@
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,12 +16,23 @@ public class InterfazMochila : MonoBehaviour
     [Header("Detalle del item seleccionado")]
     [SerializeField] private TMP_Text textoNombre;
     [SerializeField] private TMP_Text textoDescripcion;
-    [SerializeField] private Button botonUsar;
+    [SerializeField] private Button botonUsar;            // también hace de "Equipar", según el item
     [SerializeField] private Button botonDescartar;
-    [Tooltip("Opcional: muestra avisos como 'La linterna ya está cargada'.")]
+
+    [Header("Mano")]
+    [SerializeField] private ManoDani mano;
+    [SerializeField] private Image iconoMano;
+    [SerializeField] private Button botonGuardarMano;
+
+    [Header("Mensajes")]
+    [Tooltip("Ponelo DENTRO del PanelMochila. Opcional.")]
     [SerializeField] private TMP_Text textoMensaje;
+    [SerializeField] private float segundosVisible = 1f;
+    [SerializeField] private float segundosDesvanecer = 0.4f;
 
     private SlotMochilaUI[] _slots;
+    private TMP_Text _textoBotonUsar;
+    private Coroutine _rutinaMensaje;
     private int _indiceSeleccionado = -1;
     private CursorLockMode _cursorPrevio;
     private bool _cursorVisiblePrevio;
@@ -40,7 +52,18 @@ public class InterfazMochila : MonoBehaviour
         }
 
         botonDescartar.onClick.AddListener(DescartarSeleccionado);
-        if (botonUsar != null) botonUsar.onClick.AddListener(UsarSeleccionado);
+
+        if (botonUsar != null)
+        {
+            botonUsar.onClick.AddListener(UsarSeleccionado);
+            _textoBotonUsar = botonUsar.GetComponentInChildren<TMP_Text>();
+        }
+
+        if (botonGuardarMano != null) botonGuardarMano.onClick.AddListener(GuardarMano);
+
+        // Los textos/iconos decorativos no deben tapar los clics de los botones
+        if (iconoMano != null) iconoMano.raycastTarget = false;
+        if (textoMensaje != null) textoMensaje.raycastTarget = false;
 
         panel.SetActive(false);
     }
@@ -48,12 +71,18 @@ public class InterfazMochila : MonoBehaviour
     private void OnEnable()
     {
         mochila.OnMochilaCambiada += Refrescar;
+        if (mano != null) mano.OnManoCambiada += RefrescarMano;
+
         Refrescar();
+        RefrescarMano();
     }
 
     private void OnDisable()
     {
         mochila.OnMochilaCambiada -= Refrescar;
+        if (mano != null) mano.OnManoCambiada -= RefrescarMano;
+
+        CancelarMensaje();
     }
 
     // Lo llama AtajoMochila (o GestorEntradas cuando lo muevas)
@@ -63,6 +92,7 @@ public class InterfazMochila : MonoBehaviour
 
         if (abrir && jugador.estado == EstadoPersonaje.EN_FLASHBACK) return;
 
+        CancelarMensaje();
         panel.SetActive(abrir);
 
         // Solo se bloquea a Dani: el mundo SIGUE corriendo con la mochila abierta (decisión de diseño)
@@ -77,6 +107,7 @@ public class InterfazMochila : MonoBehaviour
 
             _indiceSeleccionado = -1;
             ActualizarDetalle();
+            RefrescarMano();
         }
         else
         {
@@ -94,6 +125,22 @@ public class InterfazMochila : MonoBehaviour
         ActualizarDetalle();
     }
 
+    private void RefrescarMano()
+    {
+        if (mano == null) return;
+
+        DatosItem item = mano.ItemActual;
+        bool hayItem = item != null;
+
+        if (iconoMano != null)
+        {
+            iconoMano.enabled = hayItem;
+            iconoMano.sprite = hayItem ? item.icono : null;
+        }
+
+        if (botonGuardarMano != null) botonGuardarMano.interactable = hayItem;
+    }
+
     private void Seleccionar(int indice)
     {
         _indiceSeleccionado = indice < mochila.Items.Count ? indice : -1;
@@ -109,10 +156,14 @@ public class InterfazMochila : MonoBehaviour
         textoDescripcion.text = hayItem ? item.descripcion : "";
         botonDescartar.interactable = hayItem;
 
-        // "Usar" solo está activo si el ítem tiene un efecto (las llaves no: se usan en la puerta)
-        if (botonUsar != null) botonUsar.interactable = hayItem && item.efecto != null;
+        // El botón de acción solo está activo si el ítem tiene un efecto (las llaves no: se usan en la puerta)
+        if (botonUsar != null)
+        {
+            botonUsar.interactable = hayItem && item.efecto != null;
 
-        if (textoMensaje != null) textoMensaje.text = "";
+            if (_textoBotonUsar != null)
+                _textoBotonUsar.text = hayItem && !string.IsNullOrEmpty(item.textoAccion) ? item.textoAccion : "Usar";
+        }
     }
 
     private void UsarSeleccionado()
@@ -122,14 +173,22 @@ public class InterfazMochila : MonoBehaviour
         int cantidadAntes = mochila.Items.Count;
         mochila.UsarDesdeMochila(_indiceSeleccionado, jugador, out string mensaje);
 
-        // Si se consumió, los ítems de abajo se corrieron un lugar: la selección ya no apunta a lo mismo
+        // Si salió un ítem de la lista, los de abajo se corrieron un lugar: la selección ya no apunta a lo mismo
         if (mochila.Items.Count != cantidadAntes)
         {
             _indiceSeleccionado = -1;
             ActualizarDetalle();
         }
 
-        if (textoMensaje != null) textoMensaje.text = mensaje;
+        MostrarMensaje(mensaje);
+    }
+
+    private void GuardarMano()
+    {
+        if (mano == null) return;
+
+        mano.TryGuardarEnMochila(mochila, out string mensaje);
+        MostrarMensaje(mensaje);
     }
 
     private void DescartarSeleccionado()
@@ -140,5 +199,60 @@ public class InterfazMochila : MonoBehaviour
         _indiceSeleccionado = -1;
         mochila.Descartar(indice);
         ActualizarDetalle();
+    }
+
+    // ---------------------------------------------------------------
+    // Mensajes: aparecen, quedan 'segundosVisible' y se desvanecen solos
+    // ---------------------------------------------------------------
+    private void MostrarMensaje(string mensaje)
+    {
+        if (textoMensaje == null) return;
+
+        CancelarMensaje();
+        if (string.IsNullOrEmpty(mensaje)) return;
+
+        _rutinaMensaje = StartCoroutine(RutinaMensaje(mensaje));
+    }
+
+    private IEnumerator RutinaMensaje(string mensaje)
+    {
+        textoMensaje.text = mensaje;
+        SetAlfa(1f);
+
+        yield return new WaitForSecondsRealtime(segundosVisible);
+
+        float transcurrido = 0f;
+        while (transcurrido < segundosDesvanecer)
+        {
+            transcurrido += Time.unscaledDeltaTime;
+            SetAlfa(1f - Mathf.Clamp01(transcurrido / segundosDesvanecer));
+            yield return null;
+        }
+
+        textoMensaje.text = "";
+        SetAlfa(1f);
+        _rutinaMensaje = null;
+    }
+
+    private void CancelarMensaje()
+    {
+        if (_rutinaMensaje != null)
+        {
+            StopCoroutine(_rutinaMensaje);
+            _rutinaMensaje = null;
+        }
+
+        if (textoMensaje != null)
+        {
+            textoMensaje.text = "";
+            SetAlfa(1f);
+        }
+    }
+
+    private void SetAlfa(float alfa)
+    {
+        Color color = textoMensaje.color;
+        color.a = alfa;
+        textoMensaje.color = color;
     }
 }

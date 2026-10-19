@@ -12,6 +12,7 @@ public class ControladorPersonaje : MonoBehaviour
     public GestorEntradas entradas;
     public GestionLinterna gestionLinterna;
     public MochilaDani mochila;
+    public ManoDani mano;
 
     public event Action OnPersonajeAsustado;
     public event Action<EstadoPersonaje> OnEstadoCambiado;

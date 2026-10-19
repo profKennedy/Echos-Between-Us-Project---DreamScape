@@ -12,13 +12,16 @@ public class DatosItem : ScriptableObject
     public Sprite icono;
 
     [Header("Mundo")]
-    [Tooltip("Prefab que aparece en el mundo cuando se descarta. Obligatorio si querés poder descartarlo.")]
+    [Tooltip("Prefab que aparece en el mundo cuando se descarta. Obligatorio si querés poder descartarlo (salvo objetos únicos como la linterna).")]
     public GameObject prefabMundo;
 
     [Header("Comportamiento")]
-    [Tooltip("Si está marcado, se borra de la mochila al usarse (llaves, pilas, items de puzzle).")]
+    [Tooltip("Si está marcado, el item SALE de la mochila al usarse (llaves, pilas, items de puzzle, y la linterna cuando se equipa).")]
     public bool consumirAlUsar;
 
-    [Tooltip("Qué hace al apretar 'Usar' en la mochila. Vacío = no se usa desde la mochila (ej: las llaves se usan en la puerta).")]
+    [Tooltip("Qué hace al apretar el botón de acción en la mochila. Vacío = no se usa desde la mochila (ej: las llaves se usan en la puerta).")]
     public EfectoItem efecto;
+
+    [Tooltip("Texto del botón de acción: 'Usar', 'Equipar', etc.")]
+    public string textoAccion = "Usar";
 }
