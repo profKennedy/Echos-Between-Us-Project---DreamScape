@@ -28,6 +28,7 @@ public class GestionLinterna : MonoBehaviour, IObjetoLevantable, IObjetoEnMano, 
     public bool EstaEnMano => _ubicacion == UbicacionLinterna.EnMano;
     public bool EstaEnMochila => _ubicacion == UbicacionLinterna.EnMochila;
     public bool EstaPoseida => _ubicacion != UbicacionLinterna.EnSuelo;
+    public bool UsoBloqueado { get; set; }
 
     private void Awake()
     {
@@ -187,6 +188,7 @@ public class GestionLinterna : MonoBehaviour, IObjetoLevantable, IObjetoEnMano, 
 
     public void IntentarAlternarLuz()
     {
+        if (UsoBloqueado) return;
         if (_ubicacion != UbicacionLinterna.EnMano) return; // solo se enciende si está en la mano
         linterna.AlternarLuz();
     }

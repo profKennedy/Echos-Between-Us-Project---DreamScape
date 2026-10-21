@@ -9,9 +9,9 @@ public class NivelDeAutoestima : MonoBehaviour
     public float autoestimaActual;
 
     [Header("Checkpoints")]
-    [Tooltip("DÛnde reaparece Dani. PonÈ un Empty en el inicio del nivel como primer checkpoint; los fantasmas lo reemplazan al activarse.")]
+    [Tooltip("D√≥nde reaparece Dani. Pon√© un Empty en el inicio del nivel como primer checkpoint; los fantasmas lo reemplazan al activarse.")]
     public Transform ultimoCheckpoint;
-    [Tooltip("Cu·nto tiempo queda derrotada antes de reaparecer.")]
+    [Tooltip("Cu√°nto tiempo queda derrotada antes de reaparecer.")]
     [SerializeField] private float segundosDerrotada = 2f;
 
     public event Action<float> OnAutoestimaCambiada;
@@ -20,7 +20,7 @@ public class NivelDeAutoestima : MonoBehaviour
     // Se dispara cuando cambia el checkpoint activo (los fantasmas lo usan para prender/apagar su indicador)
     public event Action<Transform> OnCheckpointCambiado;
 
-    // Se dispara cuando Dani ya reapareciÛ y puede moverse. Lleva el checkpoint donde reapareciÛ
+    // Se dispara cuando Dani ya reapareci√≥ y puede moverse. Lleva el checkpoint donde reapareci√≥
     // (el fantasma de ese checkpoint reconoce que es el suyo y va a hablarle).
     public event Action<Transform> OnReaparecida;
 
@@ -93,11 +93,11 @@ public class NivelDeAutoestima : MonoBehaviour
         _controladorDani.CambiarEstado(EstadoPersonaje.LIBRE);
         _controladorDani.movimiento.Bloquear(false);
 
-        // Al final: Dani ya est· lista, ahora el fantasma de ese checkpoint puede acercarse
+        // Al final: Dani ya est√° lista, ahora el fantasma de ese checkpoint puede acercarse
         OnReaparecida?.Invoke(ultimoCheckpoint);
     }
 
-    // Dani tiene Rigidbody: mover solo el transform deja la fÌsica con la posiciÛn vieja.
+    // Dani tiene Rigidbody: mover solo el transform deja la f√≠sica con la posici√≥n vieja.
     private void TeletransportarA(Transform destino)
     {
         Rigidbody rb = _controladorDani.movimiento.rb;
@@ -120,5 +120,11 @@ public class NivelDeAutoestima : MonoBehaviour
 
         ultimoCheckpoint = nuevoCheckpoint;
         OnCheckpointCambiado?.Invoke(ultimoCheckpoint);
+    }
+    // Derrota inmediata: ca√≠da a un pozo, alcanzada por la niebla perseguidora
+    public void Derrotar()
+    {
+        if (_estaDerrotada) return;
+        ReducirAutoestima(autoestimaActual);
     }
 }

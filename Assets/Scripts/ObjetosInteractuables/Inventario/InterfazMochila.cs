@@ -36,8 +36,15 @@ public class InterfazMochila : MonoBehaviour
     private int _indiceSeleccionado = -1;
     private CursorLockMode _cursorPrevio;
     private bool _cursorVisiblePrevio;
+    private bool _bloqueada;
 
     public bool EstaAbierta => panel.activeSelf;
+
+    public void Bloquear(bool valor)
+    {
+        _bloqueada = valor;
+        if (valor && panel.activeSelf) Alternar(); // si estaba abierta, se cierra
+    }
 
     private void Awake()
     {
@@ -90,12 +97,12 @@ public class InterfazMochila : MonoBehaviour
     {
         bool abrir = !panel.activeSelf;
 
-        if (abrir && jugador.estado == EstadoPersonaje.EN_FLASHBACK) return;
+        if (abrir && (_bloqueada || jugador.estado == EstadoPersonaje.EN_FLASHBACK)) return;
 
         CancelarMensaje();
         panel.SetActive(abrir);
 
-        // Solo se bloquea a Dani: el mundo SIGUE corriendo con la mochila abierta (decisión de diseño)
+        // Solo se bloquea a Dani: el mundo SIGUE corriendo con la mochila abierta 
         jugador.movimiento.Bloquear(abrir);
 
         if (abrir)

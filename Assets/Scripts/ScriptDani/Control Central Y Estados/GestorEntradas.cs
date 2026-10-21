@@ -20,12 +20,12 @@ public class GestorEntradas : MonoBehaviour
     // Movimiento recibido desde el joystick virtual.
     private Vector2 _movimientoMobile;
 
-    // Indica si se están usando controles móviles.
+    // Indica si se estÃ¡n usando controles mÃ³viles.
     [SerializeField] private bool usarControlesMobile = false;
 
     private void Update()
     {
-        // Elegimos de dónde obtener el movimiento.
+        // Elegimos de dÃ³nde obtener el movimiento.
         if (usarControlesMobile)
         {
             entradaMovimiento = _movimientoMobile;
@@ -64,7 +64,7 @@ public class GestorEntradas : MonoBehaviour
         }
     }
 
-    // MÉTODOS PARA CONTROLES MÓVILES
+    // MÃ‰TODOS PARA CONTROLES MÃ“VILES
 
     public void EstablecerMovimientoMobile(Vector2 direccion)
     {

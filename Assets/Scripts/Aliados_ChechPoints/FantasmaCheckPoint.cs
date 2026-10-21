@@ -14,7 +14,7 @@ using UnityEngine;
 //     │    ├─ TextoMensaje    <- TextMeshPro 3D (burbuja de texto)
 //     │    └─ IndicadorActivo <- opcional: luz/partículas
 //     └─ PuntoReaparicion     <- donde aparece Dani. HERMANO de Cuerpo, no hijo
-public class FantasmaCheckpoint : MonoBehaviour
+public class FantasmaCheckPoint : MonoBehaviour
 {
     [Header("Checkpoint")]
     [Tooltip("Dónde reaparece Dani. Un Empty hijo de este objeto (NO de Cuerpo). Su flecha azul (Z) tiene que apuntar al fantasma: Dani reaparece mirándolo.")]

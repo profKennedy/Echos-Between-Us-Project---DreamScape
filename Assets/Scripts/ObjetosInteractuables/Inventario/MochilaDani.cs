@@ -34,6 +34,16 @@ public class MochilaDani : MonoBehaviour
 
     public bool Contiene(DatosItem item) => _items.Contains(item);
 
+    // Saca un item por referencia sin aplicar efectos (lo usa el reinicio de la persecución)
+    public bool TryQuitar(DatosItem item)
+    {
+        int indice = _items.IndexOf(item);
+        if (indice < 0) return false;
+
+        QuitarEn(indice);
+        return true;
+    }
+
     // "Usar" un item buscándolo por referencia (lo usan las puertas con su llave).
     // Devuelve true si estaba en la mochila. Si es consumible, además se borra.
     public bool TryUsar(DatosItem item)
