@@ -15,7 +15,7 @@ MonoBehaviour:
   nombre: Fragmento de Recuerdo
   descripcion: Fragmento de Recuerdo del corazon de dani, representa un recuerdo
     feliz que tuvo dani antes de sufrir bullying.
-  icono: {fileID: 21300000, guid: 7cc27febbb137b546885c29a7aebd0b9, type: 3}
+  icono: {fileID: 21300000, guid: 5673a460d6c3d1f45aac60a32231dd14, type: 3}
   prefabMundo: {fileID: 0}
   consumirAlUsar: 0
   efecto: {fileID: 0}

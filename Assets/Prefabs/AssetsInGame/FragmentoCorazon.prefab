@@ -149,6 +149,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1aab4170dd753764a833811042d6b21a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  datosItem: {fileID: 11400000, guid: 645e8b8c47fea31408e5b73d521b3d56, type: 2}
   cartelUI: {fileID: 5627675124254503603}
 --- !u!65 &5526697566387553858
 BoxCollider:

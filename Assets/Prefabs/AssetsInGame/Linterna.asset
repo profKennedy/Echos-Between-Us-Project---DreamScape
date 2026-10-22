@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   nombre: Linterna
   descripcion: Linterna usada para poder ahuyentar fantasmas y ver mejor el camino
-  icono: {fileID: 21300000, guid: 7a77d59bb3e21d349b8555ecea0e728e, type: 3}
+  icono: {fileID: 21300000, guid: a3aff58c3be575d47b3e899243e9dde9, type: 3}
   prefabMundo: {fileID: 0}
   consumirAlUsar: 1
   efecto: {fileID: 11400000, guid: 3de1c6a5febb72248a133ff22878dfde, type: 2}
