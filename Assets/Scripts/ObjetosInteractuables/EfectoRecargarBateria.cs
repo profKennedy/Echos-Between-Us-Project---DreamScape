@@ -16,11 +16,10 @@ public class EfectoRecargarBateria : EfectoItem
             return false;
         }
 
-        // Por ahora la linterna tiene que estar en la mano.
-        // Cuando la linterna pueda guardarse en la mochila, acá se acepta también "en la mochila".
-        if (gestion.LinternaDisponibleEnSuelo())
+        // Sirve con la linterna en la mano O guardada en la mochila. Si sigue en el suelo, no.
+        if (!gestion.EstaPoseida)
         {
-            mensaje = "Necesitás tener la linterna en la mano.";
+            mensaje = "Primero tenés que recoger la linterna.";
             return false;
         }
 

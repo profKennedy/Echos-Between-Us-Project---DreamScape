@@ -12,6 +12,7 @@ public class ControladorPersonaje : MonoBehaviour
     public GestorEntradas entradas;
     public GestionLinterna gestionLinterna;
     public MochilaDani mochila;
+    public ManoDani mano;
 
     public event Action OnPersonajeAsustado;
     public event Action<EstadoPersonaje> OnEstadoCambiado;
@@ -126,4 +127,8 @@ public class ControladorPersonaje : MonoBehaviour
 
     // Para tramos con riel: el eje lateral puede no ser el X global
     public void UsarCamara2D(Vector3 ejeLateral) => movimiento.modoActual = new Modo2DLateral(ejeLateral);
+
+    // Movimiento libre, pero relativo a una cámara fija (la del riel):
+    // "adelante" en el control es siempre "hacia el fondo de la pantalla"
+    public void UsarCamaraFija(Transform camara) => movimiento.modoActual = new ModoFreeLook(camara);
 }

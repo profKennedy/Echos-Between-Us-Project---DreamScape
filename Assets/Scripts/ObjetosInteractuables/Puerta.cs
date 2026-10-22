@@ -8,6 +8,9 @@ public class Puerta : MonoBehaviour, IInteractable
     [Tooltip("Llave que abre esta puerta. Vacío = no necesita llave.")]
     [SerializeField] private DatosItem llaveRequerida;
 
+    [Tooltip("Marcalo si la puerta NO se abre con E sino por un mecanismo (reflectores, palanca...). Se abre desde código con AbrirPorMecanismo().")]
+    [SerializeField] private bool bloqueadaPorMecanismo;
+
     [Header("Apertura")]
     [SerializeField] private float alturaApertura = 5f;
     [SerializeField] private float velocidadApertura = 2f;
@@ -21,6 +24,12 @@ public class Puerta : MonoBehaviour, IInteractable
     {
         if (_abierta) return;
 
+        if (bloqueadaPorMecanismo)
+        {
+            Debug.Log("La puerta no cede: algo más la mantiene cerrada.");
+            return;
+        }
+
         if (llaveRequerida != null)
         {
             if (jugador.mochila == null || !jugador.mochila.TryUsar(llaveRequerida))
@@ -30,17 +39,32 @@ public class Puerta : MonoBehaviour, IInteractable
             }
         }
 
-        _abierta = true;
-        MostrarPista(false);
-        StartCoroutine(Abrir());
+        Abrir();
+    }
+
+    // La llama el mecanismo que la controla (PuzzleReflectores)
+    public void AbrirPorMecanismo()
+    {
+        if (_abierta) return;
+
+        bloqueadaPorMecanismo = false;
+        Abrir();
     }
 
     public void MostrarPista(bool mostrar)
     {
-        if (cartelUI != null) cartelUI.SetActive(mostrar && !_abierta);
+        // Si la abre un mecanismo, el cartel "E - Abrir" sería mentira
+        if (cartelUI != null) cartelUI.SetActive(mostrar && !_abierta && !bloqueadaPorMecanismo);
     }
 
-    private IEnumerator Abrir()
+    private void Abrir()
+    {
+        _abierta = true;
+        MostrarPista(false);
+        StartCoroutine(RutinaApertura());
+    }
+
+    private IEnumerator RutinaApertura()
     {
         Vector3 destino = transform.position + Vector3.up * alturaApertura;
 

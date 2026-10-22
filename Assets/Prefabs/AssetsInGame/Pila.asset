@@ -14,8 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   nombre: Bateria
   descripcion: Bateria que usa la linterna
-  icono: {fileID: 0}
+  icono: {fileID: 21300000, guid: 9be8e128676cfd84d82d8b513846a614, type: 3}
   prefabMundo: {fileID: 4374334025266265483, guid: bd1d616e960a41641bf573aef57cc21f,
     type: 3}
   consumirAlUsar: 1
   efecto: {fileID: 11400000, guid: e4829d782e71f394ba6a474cf4a21fa0, type: 2}
+  textoAccion: Usar

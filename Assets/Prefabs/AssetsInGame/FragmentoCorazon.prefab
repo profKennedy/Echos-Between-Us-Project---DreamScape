@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 6320047473993049382}
   - component: {fileID: 2175750469290762609}
   - component: {fileID: 5526697566387553858}
+  - component: {fileID: -3518413001568180718}
   m_Layer: 6
   m_Name: FragmentoCorazon
   m_TagString: Untagged
@@ -148,6 +149,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1aab4170dd753764a833811042d6b21a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  datosItem: {fileID: 11400000, guid: 645e8b8c47fea31408e5b73d521b3d56, type: 2}
   cartelUI: {fileID: 5627675124254503603}
 --- !u!65 &5526697566387553858
 BoxCollider:
@@ -170,6 +172,20 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 8, y: 1, z: 8}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &-3518413001568180718
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3742243164145537303}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fa05bb2d5707691469f5e08aa4acaeaf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  datos: {fileID: 11400000, guid: c5c05ded07b3446498b07dfeb53d3792, type: 2}
+  cartelUI: {fileID: 0}
 --- !u!1 &4118136226166525416
 GameObject:
   m_ObjectHideFlags: 0
