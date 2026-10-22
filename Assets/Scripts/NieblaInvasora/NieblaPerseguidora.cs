@@ -2,10 +2,13 @@ using System;
 using UnityEngine;
 
 // El "ente" que persigue a Dani (por ahora un cubo negro). Avanza en línea recta a velocidad fija
-// desde el punto de aparición hasta el punto de detención (el marco de la puerta, donde se traba).
+// desde el punto de aparición hasta el punto de detención (donde se traba).
 // Solo se mueve y avisa si toca a Dani: quién decide qué pasa después es PersecucionNiebla.
-// Objeto: Cubo con BoxCollider (Is Trigger) + Rigidbody (Is Kinematic, sin gravedad). Arranca DESACTIVADO.
-[RequireComponent(typeof(Rigidbody))]
+// Objeto: Cubo con BoxCollider + Rigidbody (Is Kinematic, sin gravedad). Arranca DESACTIVADO.
+//
+// La detección NO usa OnTriggerEnter: pregunta cada paso de física "¿hay algo de Dani dentro de mi caja?".
+// Así no depende de la matriz de colisiones de capas, ni de que Dani ya estuviera dentro al aparecer.
+[RequireComponent(typeof(Rigidbody), typeof(BoxCollider))]
 public class NieblaPerseguidora : MonoBehaviour
 {
     [Tooltip("Tiene que ser menor que la velocidad de Dani (5 por defecto, 2.5 en sigilo) o no hay forma de perderla.")]
@@ -17,6 +20,9 @@ public class NieblaPerseguidora : MonoBehaviour
     public event Action OnDetenida;
 
     private Rigidbody _rb;
+    private BoxCollider _caja;
+    private readonly Collider[] _hits = new Collider[16];
+
     private Vector3 _direccion;
     private float _distanciaRestante;
     private float _espera;
@@ -26,6 +32,7 @@ public class NieblaPerseguidora : MonoBehaviour
     private void Awake()
     {
         _rb = GetComponent<Rigidbody>();
+        _caja = GetComponent<BoxCollider>();
     }
 
     public void Iniciar(Vector3 origen, Vector3 destino)
@@ -51,13 +58,20 @@ public class NieblaPerseguidora : MonoBehaviour
         _letal = false;
     }
 
-    // Dani escapó: la niebla sigue hasta el marco de la puerta, pero ya no puede hacerle daño
+    // Dani escapó: la niebla sigue hasta el punto de detención, pero ya no puede hacerle daño
     public void HacerInofensiva()
     {
         _letal = false;
     }
 
     private void FixedUpdate()
+    {
+        Avanzar();
+
+        if (_letal) BuscarJugador();
+    }
+
+    private void Avanzar()
     {
         if (!_moviendo) return;
 
@@ -73,25 +87,30 @@ public class NieblaPerseguidora : MonoBehaviour
 
         if (_distanciaRestante <= 0f)
         {
-            // Llegó al marco de la puerta: es demasiado grande para pasar, se queda ahí
+            // Llegó al final del recorrido: es demasiado grande para seguir, se queda ahí
             _moviendo = false;
             _letal = false;
             OnDetenida?.Invoke();
         }
     }
 
-    private void OnTriggerEnter(Collider other) => Comprobar(other);
-    private void OnTriggerStay(Collider other) => Comprobar(other);
-
-    private void Comprobar(Collider other)
+    private void BuscarJugador()
     {
-        if (!_letal) return;
+        Vector3 centro = transform.TransformPoint(_caja.center);
+        Vector3 mitad = Vector3.Scale(_caja.size, transform.lossyScale) * 0.5f;
+        mitad = new Vector3(Mathf.Abs(mitad.x), Mathf.Abs(mitad.y), Mathf.Abs(mitad.z));
 
-        // Dani puede tener varios colliders: se busca el controlador en el objeto o sus padres
-        if (other.GetComponentInParent<ControladorPersonaje>() != null)
+        int cantidad = Physics.OverlapBoxNonAlloc(centro, mitad, _hits, transform.rotation, ~0, QueryTriggerInteraction.Ignore);
+
+        for (int i = 0; i < cantidad; i++)
         {
+            // Dani puede tener varios colliders: se busca el controlador en el objeto o sus padres
+            if (_hits[i].GetComponentInParent<ControladorPersonaje>() == null) continue;
+
             _letal = false; // un solo aviso por intento
+            Debug.Log("NieblaPerseguidora: alcanzó a Dani.", this);
             OnAlcanzoAJugador?.Invoke();
+            return;
         }
     }
 }

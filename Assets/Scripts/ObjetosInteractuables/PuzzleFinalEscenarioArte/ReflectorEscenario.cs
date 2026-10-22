@@ -1,48 +1,67 @@
-using Assets.Scripts.ScriptDani.Control_Central_Y_Estados;
 using System;
+using System.Collections;
 using UnityEngine;
 
-// Un reflector del escenario. Dani lo enciende con E. Va en el MISMO objeto que tiene el Collider
-// (en la capa Interactuable), porque InteraccionPersonaje busca el IInteractable en el objeto del collider.
-public class ReflectorEscenario : MonoBehaviour, IInteractable
+// Un reflector del techo. YA NO es interactuable: no sabe quién lo enciende.
+// Lo enciende un InterruptorReflector (o cualquier otro script) llamando a Encender().
+// Se prende con un parpadeo corto y recién cuando termina avisa por OnEncendido (lo escucha PuzzleReflectores).
+public class ReflectorEscenario : MonoBehaviour
 {
     [Tooltip("Todo lo que se prende con el reflector: la Light, el cono de luz, un material emisivo... Arrancan apagados. NO pongas acá el objeto que tiene este script.")]
     [SerializeField] private GameObject[] objetosAlEncender;
-    [SerializeField] private GameObject cartelUI;
+
+    [Header("Parpadeo al encender")]
+    [SerializeField] private float segundosParpadeo = 0.6f;
+    [SerializeField] private float intervaloParpadeo = 0.08f;
 
     [Header("Audio (opcional)")]
     [SerializeField] private AudioSource audioSource;
     [SerializeField] private AudioClip sfxEncender;
 
+    private bool _encendiendo;
+
+    // True recién cuando terminó el parpadeo y quedó prendido fijo
     public bool EstaEncendido { get; private set; }
 
-    // Lo escucha PuzzleReflectores para contar cuántos van
     public event Action<ReflectorEscenario> OnEncendido;
 
     private void Awake()
     {
-        Alternar(false);
+        AlternarObjetos(false);
     }
 
-    public void Interactuar(ControladorPersonaje jugador)
+    public void Encender()
     {
-        if (EstaEncendido) return;
+        if (EstaEncendido || _encendiendo) return;
 
-        EstaEncendido = true;
-        Alternar(true);
-        MostrarPista(false);
-
+        _encendiendo = true;
         if (audioSource != null && sfxEncender != null) audioSource.PlayOneShot(sfxEncender);
+
+        StartCoroutine(RutinaEncendido());
+    }
+
+    private IEnumerator RutinaEncendido()
+    {
+        float intervalo = Mathf.Max(0.02f, intervaloParpadeo);
+        float restante = segundosParpadeo;
+
+        while (restante > 0f)
+        {
+            AlternarObjetos(UnityEngine.Random.value > 0.5f);
+
+            float espera = Mathf.Min(intervalo, restante);
+            yield return new WaitForSeconds(espera);
+            restante -= espera;
+        }
+
+        AlternarObjetos(true);
+        EstaEncendido = true;
+        _encendiendo = false;
 
         OnEncendido?.Invoke(this);
     }
 
-    public void MostrarPista(bool mostrar)
-    {
-        if (cartelUI != null) cartelUI.SetActive(mostrar && !EstaEncendido);
-    }
-
-    private void Alternar(bool encendido)
+    private void AlternarObjetos(bool encendido)
     {
         foreach (GameObject objeto in objetosAlEncender)
         {

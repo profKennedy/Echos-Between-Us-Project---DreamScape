@@ -90,16 +90,10 @@ public class PersecucionNiebla : MonoBehaviour
 
         Estado = EstadoPersecucion.EnCurso;
 
-        // Eje de carrera = dirección del pasillo (aparición -> puerta), con el signo que hace que
-        // "derecha" en pantalla sea "derecha" en el movimiento. Así la cámara puede ir en ángulo (2.5D).
-        Vector3 recorrido = Vector3.ProjectOnPlane(puntoDetencionNiebla.position - puntoAparicionNiebla.position, Vector3.up).normalized;
-        Vector3 derechaPantalla = Vector3.ProjectOnPlane(camaraRiel.transform.right, Vector3.up).normalized;
-
-        float alineacion = Vector3.Dot(derechaPantalla, recorrido);
-        if (Mathf.Abs(alineacion) < 0.5f)
-            Debug.LogWarning("PersecucionNiebla: la cámara del riel mira casi a lo largo del pasillo. Girala para que mire de costado.", this);
-
-        jugador.UsarCamara2D(recorrido * (alineacion >= 0f ? 1f : -1f));
+        // Movimiento libre (adelante/atrás/izquierda/derecha) pero relativo a la cámara del riel.
+        // Como esa cámara mira siempre en la misma dirección, "arriba" en el control es siempre
+        // "hacia el fondo de la pantalla": es el movimiento de Little Nightmares.
+        jugador.UsarCamaraFija(camaraRiel.transform);
         camaraRiel.SetActive(true);
 
         BloquearUso(true);
@@ -131,7 +125,11 @@ public class PersecucionNiebla : MonoBehaviour
     // ---------------------------------------------------------------
     private void AlSerAlcanzada()
     {
-        if (Estado != EstadoPersecucion.EnCurso) return;
+        if (Estado != EstadoPersecucion.EnCurso)
+        {
+            Debug.LogWarning($"PersecucionNiebla: la niebla tocó a Dani pero el estado es {Estado}, no EnCurso. No se reinicia.", this);
+            return;
+        }
 
         _autoestima.Derrotar(); // dispara OnConsumidaPorNiebla -> AlSerDerrotada
     }
