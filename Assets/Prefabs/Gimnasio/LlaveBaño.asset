@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcb307dab3de7b1449e2ab690babcb54, type: 3}
   m_Name: "LlaveBa\xF1o"
   m_EditorClassIdentifier: 
-  nombre: "LlaveBa\xF1o"
+  nombre: "Llave del Ba\xF1o"
   descripcion: "Una peque\xF1a llave encontrada en el vestuario."
   icono: {fileID: 21300000, guid: 146fbb3c42f125c408b2cb2de75707df, type: 3}
   prefabMundo: {fileID: 0}
