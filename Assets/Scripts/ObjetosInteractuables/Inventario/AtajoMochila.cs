@@ -29,4 +29,16 @@ public class AtajoMochila : MonoBehaviour
             interfaz.Alternar();
 #endif
     }
+
+    // Permite abrir y cerrar la mochila desde PC o Android.
+    public void AlternarMochila()
+    {
+        if (interfaz == null)
+        {
+            Debug.LogWarning("No se asignó la InterfazMochila.");
+            return;
+        }
+
+        interfaz.Alternar();
+    }
 }

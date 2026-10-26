@@ -1,8 +1,12 @@
 using UnityEngine;
+using UnityEngine.Events;
 using Assets.Scripts.ScriptDani.Control_Central_Y_Estados;
 
 public class PuertaConLlave : MonoBehaviour, IInteractable
 {
+    [Header("Eventos")]
+    public UnityEvent alAbrirPuerta;
+
     [Header("Configuracion")]
     [SerializeField] private DatosItem llaveNecesaria;
 
@@ -45,6 +49,8 @@ public class PuertaConLlave : MonoBehaviour, IInteractable
             puerta.SetActive(false);
 
         Debug.Log("Puerta abierta.");
+
+        alAbrirPuerta?.Invoke();
     }
 
     public void MostrarPista(bool mostrar)
