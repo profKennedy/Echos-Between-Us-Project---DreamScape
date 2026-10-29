@@ -25,7 +25,11 @@ public class ControladorAnimacionesDani : MonoBehaviour
     private static readonly int EstaAsustada = Animator.StringToHash("EstaAsustada");
     private static readonly int Recoger = Animator.StringToHash("Recoger");
 
-    private bool _estabaEnSuelo = true;
+    private bool _saltoActivo = false;
+    private bool _despegoDelSuelo = false;
+    private float _tiempoInicioSalto = 0f;
+
+    private const float TiempoMinimoSalto = 0.1f;
 
     private void Awake()
     {
@@ -42,12 +46,16 @@ public class ControladorAnimacionesDani : MonoBehaviour
     {
         _controlador.OnEstadoCambiado += AlCambiarEstado;
         _interaccion.OnLevantarObjeto += ReproducirAnimacionRecoger;
+
+        _movimiento.OnSaltoRealizado += AlSaltar;
     }
 
     private void OnDisable()
     {
         _controlador.OnEstadoCambiado -= AlCambiarEstado;
         _interaccion.OnLevantarObjeto -= ReproducirAnimacionRecoger;
+
+        _movimiento.OnSaltoRealizado -= AlSaltar;
     }
 
     private void Update()
@@ -59,18 +67,46 @@ public class ControladorAnimacionesDani : MonoBehaviour
 
         bool enMovimiento = velocidadHorizontal > UmbralMovimiento;
 
-        // UNA sola consulta de suelo por frame (antes eran dos SphereCast), reutilizada abajo
         bool enSuelo = _movimiento.EstaEnSuelo();
 
-        _animator.SetInteger(EstaCorriendo, enMovimiento ? 1 : 0);
-        _animator.SetBool(EstaSaltando, !enSuelo);
+        // Actualizar movimiento horizontal.
+        _animator.SetInteger(
+            EstaCorriendo,
+            enMovimiento ? 1 : 0
+        );
 
+        // CONTROL DEL SALTO
+        if (_saltoActivo)
+        {
+            // Confirmar que Dany despegó del suelo.
+            if (!enSuelo)
+            {
+                _despegoDelSuelo = true;
+            }
+
+            // Finalizar cuando aterriza después de despegar.
+            if (_despegoDelSuelo && enSuelo &&
+                Time.time - _tiempoInicioSalto >= TiempoMinimoSalto)
+            {
+                _saltoActivo = false;
+                _despegoDelSuelo = false;
+            }
+
+            // Protección ante detecciones de suelo que no registren
+            // correctamente el instante de despegue.
+            if (!_despegoDelSuelo &&
+                enSuelo &&
+                Time.time - _tiempoInicioSalto > 0.3f)
+            {
+                _saltoActivo = false;
+            }
+        }
+
+        // Actualizar Animator.
+        _animator.SetBool(EstaSaltando, _saltoActivo);
+
+        // Actualizar sonidos de pasos.
         ActualizarAudioPasos(enMovimiento, enSuelo);
-
-        if (_estabaEnSuelo && !enSuelo && audioSourceSfx != null && salto != null)
-            audioSourceSfx.PlayOneShot(salto);
-
-        _estabaEnSuelo = enSuelo;
     }
 
     private void ActualizarAudioPasos(bool enMovimiento, bool enSuelo)
@@ -97,6 +133,20 @@ public class ControladorAnimacionesDani : MonoBehaviour
     private void ReproducirAnimacionRecoger()
     {
         _animator.SetTrigger(Recoger);
+    }
+
+    private void AlSaltar()
+    {
+        _saltoActivo = true;
+        _despegoDelSuelo = false;
+        _tiempoInicioSalto = Time.time;
+
+        _animator.SetBool(EstaSaltando, true);
+
+        if (audioSourceSfx != null && salto != null)
+        {
+            audioSourceSfx.PlayOneShot(salto);
+        }
     }
 
     private void AlCambiarEstado(EstadoPersonaje nuevoEstado)

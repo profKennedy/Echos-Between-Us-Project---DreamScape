@@ -1,4 +1,5 @@
 using UnityEngine;
+using System;
 
 public class MovimientoPersonaje : MonoBehaviour
 {
@@ -10,6 +11,7 @@ public class MovimientoPersonaje : MonoBehaviour
     public float fuerzaSaltoActual = 6f;
     public bool enSigilo;
     public LayerMask layerSuelo;
+    public event Action OnSaltoRealizado;
 
     public IModoMovimiento modoActual;
 
@@ -69,7 +71,20 @@ public class MovimientoPersonaje : MonoBehaviour
         if (valor) rb.velocity = new Vector3(0f, rb.velocity.y, 0f);
     }
 
-    public void Saltar() { if (EstaEnSuelo()) rb.AddForce(Vector3.up * fuerzaSaltoActual, ForceMode.Impulse); }
+    public void Saltar()
+    {
+        if (_bloqueado) return;
+
+        if (EstaEnSuelo())
+        {
+            rb.AddForce(
+                Vector3.up * fuerzaSaltoActual,
+                ForceMode.Impulse
+            );
+
+            OnSaltoRealizado?.Invoke();
+        }
+    }
 
     public void ActivarSigilo(bool activo)
     {
