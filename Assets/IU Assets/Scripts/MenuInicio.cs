@@ -12,7 +12,7 @@ public class MenuInicio : MonoBehaviour
     private IEnumerator EsperaParaJugar()
     {
         yield return new WaitForSeconds(1f);
-        SceneManager.LoadScene("EscenaVerticalSlice");
+        SceneManager.LoadScene("BOOK");
     }
 
     public void SalirDelJuego()
