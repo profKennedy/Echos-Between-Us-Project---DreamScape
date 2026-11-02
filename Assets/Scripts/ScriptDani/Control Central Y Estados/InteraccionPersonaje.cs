@@ -1,11 +1,16 @@
 using Assets.Scripts.ScriptDani.Control_Central_Y_Estados;
 using System;
 using UnityEngine;
+using System.Collections;
 
 public class InteraccionPersonaje : MonoBehaviour
 {
     public float radioDeteccion = 2f;
     public LayerMask layerInteractuable;
+    private MovimientoPersonaje _movimiento;
+    private bool _recogiendoObjeto = false;
+    [Header("Orientación al recoger objetos")]
+    [SerializeField] private float velocidadGiroRecoger = 540f;
 
     // Buffer reutilizable: OverlapSphere (sin NonAlloc) crea un array nuevo cada frame
     private readonly Collider[] _hits = new Collider[8];
@@ -21,6 +26,7 @@ public class InteraccionPersonaje : MonoBehaviour
     private void Awake()
     {
         _jugador = GetComponent<ControladorPersonaje>();
+        _movimiento = GetComponent<MovimientoPersonaje>();
     }
 
     private void Update()
@@ -60,6 +66,46 @@ public class InteraccionPersonaje : MonoBehaviour
         return mejor;
     }
 
+    private IEnumerator PrepararLevantamiento(Transform objetivo)
+    {
+        // Primero orientar a Dany.
+        yield return StartCoroutine(GirarHaciaObjeto(objetivo));
+
+        // Después reproducir la animación de recoger.
+        OnLevantarObjeto?.Invoke();
+    }
+
+    private IEnumerator GirarHaciaObjeto(Transform objetivo)
+    {
+        if (objetivo == null)
+            yield break;
+
+        Rigidbody rb = GetComponent<Rigidbody>();
+
+        Vector3 direccion = objetivo.position - transform.position;
+        direccion.y = 0f;
+
+        if (direccion.sqrMagnitude < 0.001f)
+            yield break;
+
+        Quaternion rotacionObjetivo = Quaternion.LookRotation(direccion);
+
+        while (Quaternion.Angle(rb.rotation, rotacionObjetivo) > 1f)
+        {
+            Quaternion nuevaRotacion = Quaternion.RotateTowards(
+                rb.rotation,
+                rotacionObjetivo,
+                velocidadGiroRecoger * Time.fixedDeltaTime
+            );
+
+            rb.MoveRotation(nuevaRotacion);
+
+            yield return new WaitForFixedUpdate();
+        }
+
+        rb.MoveRotation(rotacionObjetivo);
+    }
+
     // Un MonoBehaviour destruido sigue siendo != null para C# cuando lo mirás como interfaz.
     private static bool EstaVivo(IInteractable interactable)
     {
@@ -74,8 +120,29 @@ public class InteraccionPersonaje : MonoBehaviour
         // Si es un objeto que se levanta, primero hacemos la animación.
         if (_objetoCercanoActual is IObjetoLevantable)
         {
+            _recogiendoObjeto = true;
+
+            // Detener y bloquear el movimiento.
+            _movimiento.Bloquear(true);
+
+            // Guardar el objeto pendiente.
             _interaccionPendiente = _objetoCercanoActual;
-            OnLevantarObjeto?.Invoke();
+
+            // Obtener el Transform del objeto.
+            // Esta conversión funciona si el objeto interactuable
+            // es un componente MonoBehaviour.
+            Component componenteObjeto = _objetoCercanoActual as Component;
+
+            if (componenteObjeto != null)
+            {
+                StartCoroutine(PrepararLevantamiento(componenteObjeto.transform));
+            }
+            else
+            {
+                // Si no tiene Transform, reproducir la animación normalmente.
+                OnLevantarObjeto?.Invoke();
+            }
+
             return;
         }
 
@@ -86,12 +153,27 @@ public class InteraccionPersonaje : MonoBehaviour
     // Se llama desde un Animation Event (ver nota sobre el Animator en un hijo)
     public void CompletarLevantamiento()
     {
-        if (_interaccionPendiente == null) return;
+        if (!_recogiendoObjeto) return;
 
         IInteractable pendiente = _interaccionPendiente;
-        _interaccionPendiente = null; // limpiar ANTES de ejecutar
+        _interaccionPendiente = null;
 
-        if (EstaVivo(pendiente)) pendiente.Interactuar(_jugador);
+        // Recoger el objeto en el momento indicado.
+        if (EstaVivo(pendiente))
+        {
+            pendiente.Interactuar(_jugador);
+        }
+
+    }
+
+    public void FinalizarAnimacionRecoger()
+    {
+        if (!_recogiendoObjeto) return;
+
+        _recogiendoObjeto = false;
+
+        // Dany puede volver a caminar y saltar.
+        _movimiento.Bloquear(false);
     }
 
     public void PerderLinternaPorSusto() { } // ponytail: lógica omitida hasta linkear módulo Linterna.
