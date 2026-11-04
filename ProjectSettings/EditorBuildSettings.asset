@@ -23,5 +23,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/BOOK.unity
     guid: bc60864d4282ccc4997e1c65df117f5e
+  - enabled: 1
+    path: Assets/Scenes/CinematicaCaida.unity
+    guid: 93f1f3752bad5d247a4e86b13fb64c4e
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

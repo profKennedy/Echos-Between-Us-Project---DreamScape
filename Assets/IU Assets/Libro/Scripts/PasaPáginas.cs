@@ -15,7 +15,7 @@ public class PasaPaginasUI : MonoBehaviour
 
     [Header("Transición al juego")]
     [SerializeField] private string nombreEscenaJuego = "EscenaVerticalSlice";
-    [SerializeField] private float tiempoEsperaFinal = 10f;
+    [SerializeField] private float tiempoEsperaFinal = 5f;
 
     private int paginaActual = 0;
     private bool cambiando = false;
@@ -125,7 +125,7 @@ public class PasaPaginasUI : MonoBehaviour
 
     private IEnumerator EsperarYCargarJuego()
     {
-        Debug.Log("Esperando 10 segundos antes de iniciar el juego...");
+        Debug.Log("Esperando 5 segundos antes de iniciar el juego...");
 
         yield return new WaitForSeconds(tiempoEsperaFinal);
 
