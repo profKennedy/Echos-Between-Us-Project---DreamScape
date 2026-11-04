@@ -271,7 +271,7 @@ MonoBehaviour:
   - {fileID: 21300000, guid: bdaefe069ca3d6f4cb02cbb738b1fb6e, type: 3}
   - {fileID: 21300000, guid: d9e3c9b2ca0cb2542947d99332aa1408, type: 3}
   - {fileID: 21300000, guid: d9e3c9b2ca0cb2542947d99332aa1408, type: 3}
-  nombreEscenaJuego: EscenaVerticalSlice
+  nombreEscenaJuego: CinematicaCaida
   tiempoEsperaFinal: 5
 --- !u!114 &368653312
 MonoBehaviour:
