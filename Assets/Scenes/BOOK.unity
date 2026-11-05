@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.12731704, g: 0.13414727, b: 0.121078536, a: 1}
+  m_IndirectSpecularColor: {r: 0.12731713, g: 0.13414736, b: 0.12107852, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -263,14 +263,16 @@ MonoBehaviour:
   imagenIzquierda: {fileID: 1021526391}
   imagenDerecha: {fileID: 1239127647}
   todasLasPaginas:
-  - {fileID: 21300000, guid: 6a048a0be70c1d34694122d0787b4733, type: 3}
-  - {fileID: 21300000, guid: 6a048a0be70c1d34694122d0787b4733, type: 3}
-  - {fileID: 21300000, guid: 3512af67b76b4c44f9d449909da77f1c, type: 3}
-  - {fileID: 21300000, guid: a01173fca4a8b7f4ba8eda72d3f3050b, type: 3}
-  - {fileID: 21300000, guid: a01173fca4a8b7f4ba8eda72d3f3050b, type: 3}
-  - {fileID: 21300000, guid: bdaefe069ca3d6f4cb02cbb738b1fb6e, type: 3}
-  - {fileID: 21300000, guid: d9e3c9b2ca0cb2542947d99332aa1408, type: 3}
-  - {fileID: 21300000, guid: d9e3c9b2ca0cb2542947d99332aa1408, type: 3}
+  - {fileID: 21300000, guid: e62756b110919f145ac7f702f86a3057, type: 3}
+  - {fileID: 21300000, guid: 5d9c57402372ae442aeb2996435eaa40, type: 3}
+  - {fileID: 21300000, guid: 14013d13ab4b78a44b507bfc8d3b64f5, type: 3}
+  - {fileID: 21300000, guid: c4d1d3a117b70f3498d0210fad2e21f9, type: 3}
+  - {fileID: 21300000, guid: e741615bf1488a64cba59418055d413a, type: 3}
+  - {fileID: 21300000, guid: f6b78cac2671dcb40b2f38bd501e172e, type: 3}
+  - {fileID: 21300000, guid: 8051814068f11444b9ec6350525dca82, type: 3}
+  - {fileID: 21300000, guid: c744082464df4ae4fb4356f3d55f29f3, type: 3}
+  - {fileID: 21300000, guid: 4ffbb8f3183e33e4e872e471d55fb2f4, type: 3}
+  - {fileID: 21300000, guid: eaf1eec40830e1a4795c4c94aef1cc57, type: 3}
   nombreEscenaJuego: CinematicaCaida
   tiempoEsperaFinal: 5
 --- !u!114 &368653312
@@ -1036,8 +1038,8 @@ Light:
   m_Type: 2
   m_Shape: 0
   m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
-  m_Intensity: 35.8
-  m_Range: 10
+  m_Intensity: 17
+  m_Range: 50
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
   m_CookieSize: 10
@@ -1075,7 +1077,7 @@ Light:
     serializedVersion: 2
     m_Bits: 4294967295
   m_RenderingLayerMask: 1
-  m_Lightmapping: 4
+  m_Lightmapping: 2
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
@@ -1095,7 +1097,7 @@ Transform:
   m_GameObject: {fileID: 1160919212}
   serializedVersion: 2
   m_LocalRotation: {x: 0.70297444, y: -0.17750281, z: 0.18836142, w: 0.66244966}
-  m_LocalPosition: {x: 0, y: -3.5, z: -9.34}
+  m_LocalPosition: {x: 0, y: -3.5, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
