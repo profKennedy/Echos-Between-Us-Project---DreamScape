@@ -4,6 +4,12 @@ using UnityEngine;
 
 public class Puerta : MonoBehaviour, IInteractable
 {
+    public enum TipoApertura
+    {
+        Deslizar, // La puerta sube en línea recta (las puertas básicas de antes)
+        Bisagra   // La puerta gira alrededor de su bisagra, como una puerta normal
+    }
+
     [Header("Cerradura")]
     [Tooltip("Llave que abre esta puerta. Vacío = no necesita llave.")]
     [SerializeField] private DatosItem llaveRequerida;
@@ -11,7 +17,31 @@ public class Puerta : MonoBehaviour, IInteractable
     [Tooltip("Marcalo si la puerta NO se abre con E sino por un mecanismo (reflectores, palanca...). Se abre desde código con AbrirPorMecanismo().")]
     [SerializeField] private bool bloqueadaPorMecanismo;
 
-    [Header("Apertura")]
+    [Header("Tipo de apertura")]
+    [Tooltip("Deslizar = sube en línea recta. Bisagra = gira como una puerta normal.")]
+    [SerializeField] private TipoApertura tipoApertura = TipoApertura.Deslizar;
+
+    [Header("Bisagra (solo si el tipo es Bisagra)")]
+    [Tooltip("Objeto vacío ubicado EXACTAMENTE en la bisagra. Si lo dejás vacío se usa el pivote de esta puerta (el origen del modelo).")]
+    [SerializeField] private Transform pivoteBisagra;
+
+    [Tooltip("Eje de giro, en el espacio local del pivote. Normalmente Y (0,1,0). Si el modelo vino de Blender con otra orientación, probá Z (0,0,1). Seleccioná la puerta y mirá el gizmo amarillo.")]
+    [SerializeField] private Vector3 ejeLocal = Vector3.up;
+
+    [Tooltip("Cuántos grados se abre.")]
+    [Range(0f, 170f)]
+    [SerializeField] private float anguloApertura = 90f;
+
+    [Tooltip("Grados por segundo.")]
+    [SerializeField] private float velocidadGiro = 90f;
+
+    [Tooltip("Si está marcado, la puerta se abre para el lado contrario a donde está Dani (no te golpea).")]
+    [SerializeField] private bool abrirAlejandoseDelJugador = true;
+
+    [Tooltip("Da vuelta el sentido del giro. Con 'Abrir Alejandose Del Jugador' invierte el resultado automático.")]
+    [SerializeField] private bool invertirSentido;
+
+    [Header("Deslizar (solo si el tipo es Deslizar)")]
     [SerializeField] private float alturaApertura = 5f;
     [SerializeField] private float velocidadApertura = 2f;
 
@@ -39,7 +69,7 @@ public class Puerta : MonoBehaviour, IInteractable
             }
         }
 
-        Abrir();
+        Abrir(jugador.transform);
     }
 
     // La llama el mecanismo que la controla (PuzzleReflectores)
@@ -48,7 +78,7 @@ public class Puerta : MonoBehaviour, IInteractable
         if (_abierta) return;
 
         bloqueadaPorMecanismo = false;
-        Abrir();
+        Abrir(null); // Sin jugador: usa el sentido por defecto
     }
 
     public void MostrarPista(bool mostrar)
@@ -57,14 +87,73 @@ public class Puerta : MonoBehaviour, IInteractable
         if (cartelUI != null) cartelUI.SetActive(mostrar && !_abierta && !bloqueadaPorMecanismo);
     }
 
-    private void Abrir()
+    private void Abrir(Transform jugador)
     {
         _abierta = true;
         MostrarPista(false);
-        StartCoroutine(RutinaApertura());
+
+        if (tipoApertura == TipoApertura.Bisagra)
+            StartCoroutine(RutinaBisagra(jugador));
+        else
+            StartCoroutine(RutinaDeslizar());
     }
 
-    private IEnumerator RutinaApertura()
+    private IEnumerator RutinaBisagra(Transform jugador)
+    {
+        Transform pivote = pivoteBisagra != null ? pivoteBisagra : transform;
+
+        // Todo se calcula UNA vez al empezar: así la puerta no acumula error de redondeo
+        Vector3 puntoPivote = pivote.position;
+        Vector3 eje = pivote.TransformDirection(ejeLocal).normalized;
+        Vector3 posicionInicial = transform.position;
+        Quaternion rotacionInicial = transform.rotation;
+
+        float signo = 1f;
+        if (abrirAlejandoseDelJugador && jugador != null)
+            signo = SignoParaAlejarseDe(jugador.position, puntoPivote, eje);
+        if (invertirSentido) signo = -signo;
+
+        float objetivo = Mathf.Abs(anguloApertura);
+        float velocidad = Mathf.Max(1f, velocidadGiro);
+        float actual = 0f;
+
+        while (actual < objetivo)
+        {
+            actual = Mathf.MoveTowards(actual, objetivo, velocidad * Time.deltaTime);
+
+            Quaternion giro = Quaternion.AngleAxis(actual * signo, eje);
+            transform.SetPositionAndRotation(
+                puntoPivote + giro * (posicionInicial - puntoPivote),
+                giro * rotacionInicial);
+
+            yield return null;
+        }
+    }
+
+    // +1 o -1: el sentido en que la hoja de la puerta se aleja del jugador
+    private float SignoParaAlejarseDe(Vector3 posicionJugador, Vector3 puntoPivote, Vector3 eje)
+    {
+        Vector3 centroHoja = CentroDeLaHoja();
+        Vector3 radio = Vector3.ProjectOnPlane(centroHoja - puntoPivote, eje);
+
+        // Si el pivote está en el centro de la hoja no hay forma de saber hacia dónde barre
+        if (radio.sqrMagnitude < 0.0001f) return 1f;
+
+        // Hacia dónde se movería la hoja con un giro positivo
+        Vector3 tangente = Quaternion.AngleAxis(10f, eje) * radio - radio;
+        Vector3 haciaJugador = Vector3.ProjectOnPlane(posicionJugador - centroHoja, eje);
+
+        // Si el giro positivo barre hacia el jugador, giramos al revés
+        return Vector3.Dot(tangente, haciaJugador) > 0f ? -1f : 1f;
+    }
+
+    private Vector3 CentroDeLaHoja()
+    {
+        Renderer render = GetComponentInChildren<Renderer>();
+        return render != null ? render.bounds.center : transform.position;
+    }
+
+    private IEnumerator RutinaDeslizar()
     {
         Vector3 destino = transform.position + Vector3.up * alturaApertura;
 
@@ -73,5 +162,18 @@ public class Puerta : MonoBehaviour, IInteractable
             transform.position = Vector3.MoveTowards(transform.position, destino, velocidadApertura * Time.deltaTime);
             yield return null;
         }
+    }
+
+    // Ayuda visual en la Scene: esfera en la bisagra y línea a lo largo del eje de giro
+    private void OnDrawGizmosSelected()
+    {
+        if (tipoApertura != TipoApertura.Bisagra) return;
+
+        Transform pivote = pivoteBisagra != null ? pivoteBisagra : transform;
+        Vector3 eje = pivote.TransformDirection(ejeLocal).normalized;
+
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(pivote.position, 0.15f);
+        Gizmos.DrawLine(pivote.position - eje * 2f, pivote.position + eje * 2f);
     }
 }
