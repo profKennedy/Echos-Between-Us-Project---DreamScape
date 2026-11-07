@@ -22,9 +22,54 @@ public class MovimientoPersonaje : MonoBehaviour
     private float _factorEncogimiento = 1f;
     private CapsuleCollider _capsule;
 
+    [Header("Movimiento al encogerse")]
+    [SerializeField] private EfectoEncogimiento efectoEncogimiento;
+
+    [SerializeField, Range(0.1f, 1f)]
+    private float multiplicadorVelocidadMinima = 0.35f;
+
+    [SerializeField, Range(0.1f, 1f)]
+    private float multiplicadorSaltoMinimo = 0.45f;
+
     private void Awake()
     {
         _capsule = GetComponent<CapsuleCollider>();
+
+        if (efectoEncogimiento == null)
+            efectoEncogimiento = GetComponent<EfectoEncogimiento>();
+
+        velocidadActual = velocidadBase;
+        fuerzaSaltoActual = fuerzaSaltoBase;
+    }
+
+    private void Update()
+    {
+        if (efectoEncogimiento == null)
+            return;
+
+        float factorActual = efectoEncogimiento.ObtenerFactorActual();
+
+        float progreso = Mathf.InverseLerp(
+            efectoEncogimiento.factorMinimo,
+            1f,
+            factorActual
+        );
+
+        float factorVelocidad = Mathf.Lerp(
+            multiplicadorVelocidadMinima,
+            1f,
+            progreso
+        );
+
+        float factorSalto = Mathf.Lerp(
+            multiplicadorSaltoMinimo,
+            1f,
+            progreso
+        );
+
+        AplicarModificadoresEncogimiento(factorVelocidad);
+
+        fuerzaSaltoActual = fuerzaSaltoBase * factorSalto;
     }
 
     public void Mover(Vector2 dir)

@@ -50,6 +50,10 @@ public class Puerta : MonoBehaviour, IInteractable
 
     private bool _abierta;
 
+    private Vector3 _posicionCerrada;
+    private Quaternion _rotacionCerrada;
+    private Coroutine _animacionPuerta;
+
     public void Interactuar(ControladorPersonaje jugador)
     {
         if (_abierta) return;
@@ -87,16 +91,88 @@ public class Puerta : MonoBehaviour, IInteractable
         if (cartelUI != null) cartelUI.SetActive(mostrar && !_abierta && !bloqueadaPorMecanismo);
     }
 
+    public void CerrarPorEvento()
+    {
+        if (!_abierta || tipoApertura != TipoApertura.Bisagra)
+            return;
+
+        if (_animacionPuerta != null)
+            StopCoroutine(_animacionPuerta);
+
+        _animacionPuerta = StartCoroutine(RutinaCerrarBisagra());
+    }
+
+    private IEnumerator RutinaCerrarBisagra()
+    {
+        Vector3 posicionInicial = transform.position;
+        Quaternion rotacionInicial = transform.rotation;
+
+        float duracion = Quaternion.Angle(
+            rotacionInicial,
+            _rotacionCerrada
+        ) / Mathf.Max(1f, velocidadGiro);
+
+        duracion = Mathf.Max(0.01f, duracion);
+
+        float tiempo = 0f;
+
+        while (tiempo < duracion)
+        {
+            tiempo += Time.deltaTime;
+
+            float t = Mathf.Clamp01(tiempo / duracion);
+
+            transform.SetPositionAndRotation(
+                Vector3.Lerp(
+                    posicionInicial,
+                    _posicionCerrada,
+                    t
+                ),
+                Quaternion.Slerp(
+                    rotacionInicial,
+                    _rotacionCerrada,
+                    t
+                )
+            );
+
+            yield return null;
+        }
+
+        transform.SetPositionAndRotation(
+            _posicionCerrada,
+            _rotacionCerrada
+        );
+
+        _abierta = false;
+
+        // Evitamos que Dani vuelva a abrirla durante el puzzle.
+        bloqueadaPorMecanismo = true;
+
+        _animacionPuerta = null;
+
+        Debug.Log("La puerta del aula se cerró.");
+    }
+
+    private void Awake()
+    {
+        _posicionCerrada = transform.position;
+        _rotacionCerrada = transform.rotation;
+    }
+
     private void Abrir(Transform jugador)
     {
         _abierta = true;
         MostrarPista(false);
 
+        if (_animacionPuerta != null)
+            StopCoroutine(_animacionPuerta);
+
         if (tipoApertura == TipoApertura.Bisagra)
-            StartCoroutine(RutinaBisagra(jugador));
+            _animacionPuerta = StartCoroutine(RutinaBisagra(jugador));
         else
-            StartCoroutine(RutinaDeslizar());
+            _animacionPuerta = StartCoroutine(RutinaDeslizar());
     }
+
 
     private IEnumerator RutinaBisagra(Transform jugador)
     {

@@ -286,6 +286,7 @@ MonoBehaviour:
   interactuarPresionado: 0
   alternarLinternaPresionado: 0
   soltarLinternaPresionado: 0
+  usarControlesMobile: 0
 --- !u!114 &5898546441550532128
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -304,6 +305,8 @@ MonoBehaviour:
   efectoEncogimiento: {fileID: 694449340061828649}
   entradas: {fileID: 8576483687527858623}
   gestionLinterna: {fileID: 0}
+  mochila: {fileID: 0}
+  mano: {fileID: 0}
   camaraFreeLook: {fileID: 0}
   transformMano: {fileID: 9183636501731244836}
 --- !u!114 &4777414457921499884
@@ -322,6 +325,7 @@ MonoBehaviour:
   layerInteractuable:
     serializedVersion: 2
     m_Bits: 64
+  velocidadGiroRecoger: 540
 --- !u!114 &3650400384895023412
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -334,8 +338,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6aca9eff53e9d0547b14150158c4eec1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  nivelNegatividadPorSegundo: 0.3
-  umbralParaAsustar: 0.5
+  perdidaPorSegundo: 15
+  recuperacionPorSegundo: 5
+  toleranciaMirada: 0.1
 --- !u!114 &1277944179600659772
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -804,6 +809,7 @@ MonoBehaviour:
   autoestimaMaxima: 100
   autoestimaActual: 0
   ultimoCheckpoint: {fileID: 0}
+  segundosDerrotada: 2
 --- !u!4 &7810555000342510213 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 9add0964d699d164b9cfc3315f620886,

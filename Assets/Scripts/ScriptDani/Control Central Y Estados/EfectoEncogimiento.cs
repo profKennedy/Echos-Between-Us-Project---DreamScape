@@ -13,6 +13,7 @@ public class EfectoEncogimiento : MonoBehaviour
     [SerializeField] AudioSource audioSource;
     [SerializeField] AudioClip sfxEncogerse;
 
+    private bool encogimientoForzado = false;
     private float _alturaOriginal;
     private float _radioOriginal;
     private Vector3 _centroOriginal;
@@ -86,7 +87,30 @@ public class EfectoEncogimiento : MonoBehaviour
 
     private void ActualizarTamaño(float porcentajeAutoestima)
     {
-        factorObjetivo = Mathf.Lerp(factorMinimo, 1f, porcentajeAutoestima);
+        if (encogimientoForzado)
+            return;
+
+        factorObjetivo = Mathf.Lerp(
+            factorMinimo,
+            1f,
+            porcentajeAutoestima
+        );
+    }
+
+
+    public void EncogerPorPuzzle()
+    {
+        encogimientoForzado = true;
+        factorObjetivo = factorMinimo;
+
+        if (audioSource != null && sfxEncogerse != null)
+            audioSource.PlayOneShot(sfxEncogerse);
+    }
+
+    public void RecuperarTamanoPorPuzzle()
+    {
+        encogimientoForzado = false;
+        factorObjetivo = 1f;
     }
 
     // OJO: este camino y ActualizarTamaño escriben factorObjetivo los dos.
