@@ -5,6 +5,10 @@ using Cinemachine;
 
 public class EventoEncogimientoAula : MonoBehaviour
 {
+    [Header("Presentacion del fragmento")]
+    [SerializeField] private CinemachineVirtualCamera camaraFragmentoAula;
+    [SerializeField] private float duracionPlanoFragmento = 2f;
+
     [Header("Referencias")]
     [SerializeField] private EfectoEncogimiento efectoEncogimiento;
     [SerializeField] private MovimientoPersonaje movimientoDani;
@@ -16,6 +20,9 @@ public class EventoEncogimientoAula : MonoBehaviour
     [Header("Puerta del aula")]
     [SerializeField] private Puerta puertaAula;
     [SerializeField] private float retrasoCierre = 0.5f;
+
+    [Header("Fantasma del aula")]
+    [SerializeField] private GameObject fantasmaAula;
 
     [Header("Camaras Cinemachine")]
     [SerializeField] private CinemachineVirtualCamera camaraCinematicaAula;
@@ -93,12 +100,33 @@ public class EventoEncogimientoAula : MonoBehaviour
             yield return null;
         }
 
+        // Mostrar el fragmento antes de devolver el control.
+        if (camaraFragmentoAula != null)
+        {
+            camaraFragmentoAula.gameObject.SetActive(true);
+            camaraFragmentoAula.Priority = 40;
+
+            // Dejamos de mostrar la cámara del encogimiento.
+            if (camaraCinematicaAula != null)
+                camaraCinematicaAula.gameObject.SetActive(false);
+
+            yield return new WaitForSeconds(duracionPlanoFragmento);
+
+            // Desactivamos la cámara del fragmento.
+            camaraFragmentoAula.gameObject.SetActive(false);
+        }
+
         // 6. Regresar a la cámara normal.
         if (camaraDani != null)
             camaraDani.Priority = 30;
 
         if (camaraCinematicaAula != null)
             camaraCinematicaAula.gameObject.SetActive(false);
+
+        if (fantasmaAula != null)
+        {
+            fantasmaAula.SetActive(true);
+        }
 
         // Esperar la transición de Cinemachine.
         yield return new WaitForSeconds(esperaRegresoCamara);
