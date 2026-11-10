@@ -240,6 +240,27 @@ public class Puerta : MonoBehaviour, IInteractable
         }
     }
 
+    public void AbrirAlCompletarPuzzle()
+    {
+        StartCoroutine(RutinaAbrirAlCompletarPuzzle());
+    }
+
+    private IEnumerator RutinaAbrirAlCompletarPuzzle()
+    {
+        // Esperamos si todavía está terminando de cerrarse.
+        while (_animacionPuerta != null)
+        {
+            yield return null;
+        }
+
+        if (_abierta)
+            yield break;
+
+        AbrirPorMecanismo();
+
+        Debug.Log("Puerta abierta: puzzle del aula completado.");
+    }
+
     // Ayuda visual en la Scene: esfera en la bisagra y línea a lo largo del eje de giro
     private void OnDrawGizmosSelected()
     {
