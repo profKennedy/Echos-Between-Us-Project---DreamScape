@@ -1,6 +1,7 @@
 using Assets.Scripts.ScriptDani.Control_Central_Y_Estados;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class Puerta : MonoBehaviour, IInteractable
 {
@@ -20,6 +21,9 @@ public class Puerta : MonoBehaviour, IInteractable
     [Header("Tipo de apertura")]
     [Tooltip("Deslizar = sube en línea recta. Bisagra = gira como una puerta normal.")]
     [SerializeField] private TipoApertura tipoApertura = TipoApertura.Deslizar;
+
+    [Header("Eventos")]
+    [SerializeField] private UnityEvent alAbrirPuerta;
 
     [Header("Bisagra (solo si el tipo es Bisagra)")]
     [Tooltip("Objeto vacío ubicado EXACTAMENTE en la bisagra. Si lo dejás vacío se usa el pivote de esta puerta (el origen del modelo).")]
@@ -171,6 +175,8 @@ public class Puerta : MonoBehaviour, IInteractable
             _animacionPuerta = StartCoroutine(RutinaBisagra(jugador));
         else
             _animacionPuerta = StartCoroutine(RutinaDeslizar());
+        
+        alAbrirPuerta?.Invoke();
     }
 
 
