@@ -31,8 +31,27 @@ public class MovimientoPersonaje : MonoBehaviour
     [SerializeField, Range(0.1f, 1f)]
     private float multiplicadorSaltoMinimo = 0.45f;
 
+    [Header("Suavizado de movimiento al encogerse")]
+    [SerializeField] private float aceleracionEncogida = 8f;
+    [SerializeField] private float desaceleracionEncogida = 12f;
+
+    [Range(0f, 1f)]
+    [SerializeField] private float controlEnAire = 0.6f;
+
+    [Header("Gravedad al encogerse")]
+    [SerializeField, Range(0.2f, 1f)]
+    private float multiplicadorGravedadMinima = 0.55f;
+
+    [Header("Control de pendientes")]
+    [SerializeField] private float anguloMaximoPendiente = 45f;
+
+    [SerializeField] private float distanciaDeteccionPendiente = 0.2f;
+
+    private float gravedadOriginal;
+
     private void Awake()
     {
+
         _capsule = GetComponent<CapsuleCollider>();
 
         if (efectoEncogimiento == null)
@@ -40,6 +59,7 @@ public class MovimientoPersonaje : MonoBehaviour
 
         velocidadActual = velocidadBase;
         fuerzaSaltoActual = fuerzaSaltoBase;
+        gravedadOriginal = Physics.gravity.y;
     }
 
     private void Update()
@@ -70,6 +90,12 @@ public class MovimientoPersonaje : MonoBehaviour
         AplicarModificadoresEncogimiento(factorVelocidad);
 
         fuerzaSaltoActual = fuerzaSaltoBase * factorSalto;
+
+        float factorGravedad = Mathf.Lerp(
+            multiplicadorGravedadMinima,
+            1f,
+            progreso
+        );
     }
 
     public void Mover(Vector2 dir)
@@ -79,6 +105,31 @@ public class MovimientoPersonaje : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (efectoEncogimiento != null && rb.useGravity)
+        {
+            float factorActual = efectoEncogimiento.ObtenerFactorActual();
+
+            float progreso = Mathf.InverseLerp(
+                efectoEncogimiento.factorMinimo,
+                1f,
+                factorActual
+            );
+
+            float factorGravedad = Mathf.Lerp(
+                multiplicadorGravedadMinima,
+                1f,
+                progreso
+            );
+
+            // Compensamos parte de la gravedad normal.
+            float compensacion = gravedadOriginal * (factorGravedad - 1f);
+
+            rb.AddForce(
+                Vector3.up * compensacion,
+                ForceMode.Acceleration
+            );
+        }
+
         if (_bloqueado) return;
 
         // El MODO decide la dirección (3D relativa a cámara, 2D lateral, etc.).
@@ -90,23 +141,109 @@ public class MovimientoPersonaje : MonoBehaviour
             direccion.y = 0f;
         }
 
-        // Sin input, o sin dirección válida (ej: solo input vertical en modo 2D): frenar
-        if (direccion.sqrMagnitude < 0.0001f)
-        {
-            rb.velocity = new Vector3(0f, rb.velocity.y, 0f);
-            return;
-        }
 
-        direccion.Normalize();
+        bool hayMovimiento = direccion.sqrMagnitude > 0.0001f;
 
-        rb.velocity = new Vector3(
-            direccion.x * velocidadActual,
-            rb.velocity.y, // Respetamos la gravedad
-            direccion.z * velocidadActual
+        if (hayMovimiento)
+            direccion.Normalize();
+
+        // Velocidad horizontal actual.
+        Vector3 velocidadHorizontal = new Vector3(
+            rb.velocity.x,
+            0f,
+            rb.velocity.z
         );
 
-        Quaternion rotacionDeseada = Quaternion.LookRotation(direccion);
-        rb.MoveRotation(Quaternion.Slerp(rb.rotation, rotacionDeseada, Time.fixedDeltaTime * velocidadRotacion));
+        // Velocidad horizontal deseada.
+        Vector3 velocidadObjetivo = hayMovimiento
+            ? direccion * velocidadActual
+            : Vector3.zero;
+
+        // Comprobamos si Dani está encogida.
+        bool estaEncogida = efectoEncogimiento != null &&
+                            efectoEncogimiento.EstaEncogida();
+
+        if (estaEncogida)
+        {
+            // Aceleramos o frenamos progresivamente.
+            float aceleracion = hayMovimiento
+                ? aceleracionEncogida
+                : desaceleracionEncogida;
+
+            // En el aire puede corregir su trayectoria,
+            // pero con menor aceleración.
+            if (!EstaEnSuelo())
+            {
+                aceleracion *= controlEnAire;
+            }
+
+            velocidadHorizontal = Vector3.MoveTowards(
+                velocidadHorizontal,
+                velocidadObjetivo,
+                aceleracion * Time.fixedDeltaTime
+            );
+        }
+        else
+        {
+            // Dani normal conserva el movimiento original.
+            velocidadHorizontal = velocidadObjetivo;
+        }
+
+        // Aplicamos el movimiento sin alterar la velocidad vertical.
+        rb.velocity = new Vector3(
+            velocidadHorizontal.x,
+            rb.velocity.y,
+            velocidadHorizontal.z
+        );
+
+        // Giramos solamente cuando hay dirección.
+        if (hayMovimiento)
+        {
+            Quaternion rotacionDeseada =
+                Quaternion.LookRotation(direccion);
+
+            rb.MoveRotation(
+                Quaternion.Slerp(
+                    rb.rotation,
+                    rotacionDeseada,
+                    Time.fixedDeltaTime * velocidadRotacion
+                )
+            );
+        }
+
+        if (!hayMovimiento && DetectarPendiente(out RaycastHit pendiente))
+        {
+            // Evitamos que la gravedad la deslice por la pendiente.
+            float factorGravedad = 1f;
+
+            if (efectoEncogimiento != null)
+            {
+                float progreso = Mathf.InverseLerp(
+                    efectoEncogimiento.factorMinimo,
+                    1f,
+                    efectoEncogimiento.ObtenerFactorActual()
+                );
+
+                factorGravedad = Mathf.Lerp(
+                    multiplicadorGravedadMinima,
+                    1f,
+                    progreso
+                );
+            }
+
+            Vector3 gravedad = Physics.gravity * factorGravedad;
+
+            Vector3 gravedadParalela = Vector3.ProjectOnPlane(
+                gravedad,
+                pendiente.normal
+            );
+
+            rb.AddForce(
+                -gravedadParalela,
+                ForceMode.Acceleration
+            );
+        }
+
     }
 
     public void Bloquear(bool valor)
@@ -161,4 +298,33 @@ public class MovimientoPersonaje : MonoBehaviour
         float distancia = _capsule.bounds.extents.y + 0.1f;
         return Physics.SphereCast(origen, radio, Vector3.down, out _, distancia, layerSuelo);
     }
+
+
+    private bool DetectarPendiente(out RaycastHit hit)
+    {
+        Vector3 origen = _capsule.bounds.center;
+
+        float distancia = _capsule.bounds.extents.y
+                          + distanciaDeteccionPendiente;
+
+        if (Physics.Raycast(
+            origen,
+            Vector3.down,
+            out hit,
+            distancia,
+            layerSuelo,
+            QueryTriggerInteraction.Ignore))
+        {
+            float angulo = Vector3.Angle(
+                hit.normal,
+                Vector3.up
+            );
+
+            return angulo > 1f &&
+                   angulo <= anguloMaximoPendiente;
+        }
+
+        return false;
+    }
+
 }

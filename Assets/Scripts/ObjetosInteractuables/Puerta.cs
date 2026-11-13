@@ -210,6 +210,8 @@ public class Puerta : MonoBehaviour, IInteractable
 
             yield return null;
         }
+
+        _animacionPuerta = null;
     }
 
     // +1 o -1: el sentido en que la hoja de la puerta se aleja del jugador
@@ -244,6 +246,7 @@ public class Puerta : MonoBehaviour, IInteractable
             transform.position = Vector3.MoveTowards(transform.position, destino, velocidadApertura * Time.deltaTime);
             yield return null;
         }
+        _animacionPuerta = null;
     }
 
     public void AbrirAlCompletarPuzzle()
