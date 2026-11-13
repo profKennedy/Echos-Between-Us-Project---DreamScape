@@ -30,6 +30,20 @@ public class EventoEncogimientoAula : MonoBehaviour
     [SerializeField] private float esperaCambioCamara = 0.5f;
     [SerializeField] private float esperaRegresoCamara = 0.5f;
 
+    [Header("Final del puzzle")]
+    [SerializeField] private float retrasoApertura = 1f;
+
+    [Tooltip("Opcional: ID que se registra al completar el aula.")]
+    [SerializeField] private string idPuzzle = "PuzzleAula";
+
+    [Header("Ambientacion del aula")]
+    [SerializeField] private GameObject elementosNegatividad;
+
+    [Header("Efectos al completar el puzzle")]
+    [SerializeField] private DesvanecerObjetosAula objetosNegatividad;
+
+    private bool puzzleCompletado = false;
+
     private bool eventoIniciado = false;
 
     private void OnTriggerEnter(Collider other)
@@ -139,5 +153,60 @@ public class EventoEncogimientoAula : MonoBehaviour
             movimientoDani.Bloquear(false);
 
         Debug.Log("Cinemática del aula finalizada. Dani está encogida.");
+    }
+
+    // Lo llama el fragmento cuando Dani termina de recogerlo.
+    public void RegistrarFragmento()
+    {
+        if (!eventoIniciado || puzzleCompletado)
+            return;
+
+        puzzleCompletado = true;
+
+        StartCoroutine(SecuenciaLiberacion());
+    }
+
+    private IEnumerator SecuenciaLiberacion()
+    {
+        Debug.Log("Puzzle del aula completado.");
+
+        // 1. Desactivar el fantasma.
+        if (fantasmaAula != null)
+            fantasmaAula.SetActive(false);
+
+        // Iniciar desaparición gradual de la decoración.
+        if (objetosNegatividad != null)
+            objetosNegatividad.IniciarDesaparicion();
+
+        // 2. Dani recupera su tamaño original.
+        if (efectoEncogimiento != null)
+            efectoEncogimiento.RecuperarTamanoPorPuzzle();
+
+        // 3. Registrar el puzzle completado.
+        if (!string.IsNullOrEmpty(idPuzzle) &&
+            GameProgressManager.Instancia != null)
+        {
+            GameProgressManager.Instancia.RegistrarPuzzleCompletado(idPuzzle);
+        }
+
+        // 4. Esperar a que Dani recupere su tamaño.
+        float tiempo = 0f;
+
+        while (efectoEncogimiento != null &&
+               efectoEncogimiento.ObtenerFactorActual() < 0.99f &&
+               tiempo < 5f)
+        {
+            tiempo += Time.deltaTime;
+            yield return null;
+        }
+
+        // Pequeña pausa antes de abrir la puerta.
+        yield return new WaitForSeconds(retrasoApertura);
+
+        // 5. Abrir nuevamente la puerta.
+        if (puertaAula != null)
+            puertaAula.AbrirAlCompletarPuzzle();
+
+        Debug.Log("Dani puede salir del aula.");
     }
 }
