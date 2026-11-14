@@ -98,19 +98,39 @@ public class NivelDeAutoestima : MonoBehaviour
     }
 
     // Dani tiene Rigidbody: mover solo el transform deja la física con la posición vieja.
+
     private void TeletransportarA(Transform destino)
     {
         Rigidbody rb = _controladorDani.movimiento.rb;
-        if (rb != null)
-        {
-            rb.velocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
-            rb.position = destino.position;
-            rb.rotation = destino.rotation;
-        }
 
-        transform.SetPositionAndRotation(destino.position, destino.rotation);
+        if (rb == null || destino == null)
+            return;
+
+        // Detener cualquier movimiento anterior.
+        rb.velocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+
+        // Desactivar temporalmente la simulación física.
+        bool eraKinematic = rb.isKinematic;
+        rb.isKinematic = true;
+
+        // Colocar a Dani en el checkpoint.
+        transform.SetPositionAndRotation(
+            destino.position,
+            destino.rotation
+        );
+
+        // Sincronizar la nueva posición con la física.
+        Physics.SyncTransforms();
+
+        // Restaurar el estado original del Rigidbody.
+        rb.isKinematic = eraKinematic;
+
+        // Asegurar que no conserve velocidad anterior.
+        rb.velocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
     }
+
 
     public float ObtenerPorcentaje() => autoestimaActual / autoestimaMaxima;
 

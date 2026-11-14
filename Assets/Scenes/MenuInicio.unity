@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.18028352, g: 0.22571376, b: 0.30692244, a: 1}
+  m_IndirectSpecularColor: {r: 0.18028334, g: 0.22571328, b: 0.3069217, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -3453,13 +3453,33 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 23476358486790846, guid: 2110928602786fe4eb88a4ac57f9c509,
         type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 23476358486790846, guid: 2110928602786fe4eb88a4ac57f9c509,
+        type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 23476358486790846, guid: 2110928602786fe4eb88a4ac57f9c509,
+        type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1061272862656007841, guid: 2110928602786fe4eb88a4ac57f9c509,
+        type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1061272862656007841, guid: 2110928602786fe4eb88a4ac57f9c509,
         type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1061272862656007841, guid: 2110928602786fe4eb88a4ac57f9c509,
+        type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1301828060404881974, guid: 2110928602786fe4eb88a4ac57f9c509,
         type: 3}
@@ -3565,6 +3585,21 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4920459836484227948, guid: 2110928602786fe4eb88a4ac57f9c509,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5438385832715011980, guid: 2110928602786fe4eb88a4ac57f9c509,
+        type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5507090840186191457, guid: 2110928602786fe4eb88a4ac57f9c509,
+        type: 3}
+      propertyPath: m_Direction
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5507090840186191457, guid: 2110928602786fe4eb88a4ac57f9c509,
         type: 3}

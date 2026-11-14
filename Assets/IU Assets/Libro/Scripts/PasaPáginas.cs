@@ -1,4 +1,4 @@
-using System.Collections;
+
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
@@ -13,38 +13,46 @@ public class PasaPaginasUI : MonoBehaviour
     public Image imagenDerecha;
     public Sprite[] todasLasPaginas;
 
-    [Header("Transición al juego")]
+    [Header("Transición a la cinemática")]
     [SerializeField] private string nombreEscenaJuego = "EscenaVerticalSlice";
-    [SerializeField] private float tiempoEsperaFinal = 5f;
 
     private int paginaActual = 0;
     private bool cambiando = false;
-
-    // Cuando llega a la última página, bloqueamos el libro.
     private bool libroFinalizado = false;
 
     private void Start()
     {
         ActualizarSprites();
-        VerificarUltimaPagina();
     }
 
     public void AvanzarPagina()
     {
-        // No permitir avanzar si el libro terminó.
-        if (cambiando || libroFinalizado) return;
+        if (cambiando || libroFinalizado)
+            return;
 
+        // Si todavía quedan páginas, avanzamos normalmente.
         if (paginaActual + 2 < todasLasPaginas.Length)
         {
             paginaActual += 2;
             EjecutarCambio();
         }
+        else
+        {
+            // Ya estamos en las últimas páginas.
+            // Una nueva pulsación inicia la cinemática.
+            libroFinalizado = true;
+            cambiando = true;
+
+            Debug.Log("Libro terminado. Cargando cinemática...");
+
+            SceneManager.LoadScene(nombreEscenaJuego);
+        }
     }
 
     public void RetrocederPagina()
     {
-        // No permitir retroceder si el libro terminó.
-        if (cambiando || libroFinalizado) return;
+        if (cambiando || libroFinalizado)
+            return;
 
         if (paginaActual >= 2)
         {
@@ -62,7 +70,6 @@ public class PasaPaginasUI : MonoBehaviour
             ActualizarSprites();
         });
 
-        // Esperamos a que termine el Fade.
         Invoke(
             nameof(DesbloquearBotones),
             efectoFade.duracionFade * 2.1f
@@ -71,12 +78,15 @@ public class PasaPaginasUI : MonoBehaviour
 
     private void ActualizarSprites()
     {
-        if (todasLasPaginas.Length == 0) return;
+        if (todasLasPaginas == null ||
+            todasLasPaginas.Length == 0)
+            return;
 
-        // Página izquierda.
         if (paginaActual < todasLasPaginas.Length)
         {
-            imagenIzquierda.sprite = todasLasPaginas[paginaActual];
+            imagenIzquierda.sprite =
+                todasLasPaginas[paginaActual];
+
             imagenIzquierda.enabled = true;
         }
         else
@@ -84,10 +94,11 @@ public class PasaPaginasUI : MonoBehaviour
             imagenIzquierda.enabled = false;
         }
 
-        // Página derecha.
         if (paginaActual + 1 < todasLasPaginas.Length)
         {
-            imagenDerecha.sprite = todasLasPaginas[paginaActual + 1];
+            imagenDerecha.sprite =
+                todasLasPaginas[paginaActual + 1];
+
             imagenDerecha.enabled = true;
         }
         else
@@ -99,38 +110,5 @@ public class PasaPaginasUI : MonoBehaviour
     private void DesbloquearBotones()
     {
         cambiando = false;
-
-        VerificarUltimaPagina();
-    }
-
-    private void VerificarUltimaPagina()
-    {
-        if (libroFinalizado || todasLasPaginas.Length == 0)
-            return;
-
-        // Comprobar si estamos en el último par de páginas.
-        bool esUltimaPagina =
-            paginaActual + 2 >= todasLasPaginas.Length;
-
-        if (esUltimaPagina)
-        {
-            // Bloqueamos definitivamente la navegación.
-            libroFinalizado = true;
-
-            Debug.Log("Última página alcanzada. Libro bloqueado.");
-
-            StartCoroutine(EsperarYCargarJuego());
-        }
-    }
-
-    private IEnumerator EsperarYCargarJuego()
-    {
-        Debug.Log("Esperando 5 segundos antes de iniciar el juego...");
-
-        yield return new WaitForSeconds(tiempoEsperaFinal);
-
-        Debug.Log("Cargando escena del juego...");
-
-        SceneManager.LoadScene(nombreEscenaJuego);
     }
 }
