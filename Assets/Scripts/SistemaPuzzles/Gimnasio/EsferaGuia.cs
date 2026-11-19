@@ -1,4 +1,5 @@
 using UnityEngine;
+using System;
 
 public class EsferaGuia : MonoBehaviour
 {
@@ -16,6 +17,8 @@ public class EsferaGuia : MonoBehaviour
 
     [Header("Desaparicion")]
     [SerializeField] private float distanciaDesaparicion = 0.15f;
+
+    public event Action OnEsferaActivada;
 
     private Vector3 posicionBase;
     private bool guiando = false;
@@ -42,6 +45,9 @@ public class EsferaGuia : MonoBehaviour
             if (distanciaJugador <= distanciaActivacion)
             {
                 guiando = true;
+
+                // Avisamos que la esfera comenzó a moverse.
+                OnEsferaActivada?.Invoke();
 
                 Debug.Log("La esfera comienza a guiar a Dani.");
             }

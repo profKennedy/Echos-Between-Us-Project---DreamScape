@@ -25,6 +25,8 @@ public class ControladorLinterna : MonoBehaviour
     // Uso de Referencia al componente Light de Unity
     public Light componenteLuz;
 
+    private bool consumirBateria = true;
+
     private void Awake()
     {
         bateriaActual = bateriaMaxima;
@@ -33,10 +35,15 @@ public class ControladorLinterna : MonoBehaviour
 
     private void Update()
     {
-        if (estaEncendida)
+        if (estaEncendida && consumirBateria)
         {
             ConsumirBateriaPorFrame();
         }
+    }
+
+    public void PermitirConsumoBateria(bool permitir)
+    {
+        consumirBateria = permitir;
     }
 
     public void Encender()
