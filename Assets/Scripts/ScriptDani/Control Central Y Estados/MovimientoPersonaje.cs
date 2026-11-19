@@ -49,6 +49,11 @@ public class MovimientoPersonaje : MonoBehaviour
 
     private float gravedadOriginal;
 
+    [Header("Seguridad del salto")]
+    [SerializeField] private float intervaloEntreSaltos = 0.2f;
+
+    private float ultimoSalto = -999f;
+
     private void Awake()
     {
 
@@ -91,11 +96,6 @@ public class MovimientoPersonaje : MonoBehaviour
 
         fuerzaSaltoActual = fuerzaSaltoBase * factorSalto;
 
-        float factorGravedad = Mathf.Lerp(
-            multiplicadorGravedadMinima,
-            1f,
-            progreso
-        );
     }
 
     public void Mover(Vector2 dir)
@@ -253,20 +253,33 @@ public class MovimientoPersonaje : MonoBehaviour
         if (valor) rb.velocity = new Vector3(0f, rb.velocity.y, 0f);
     }
 
+
     public void Saltar()
     {
-        if (_bloqueado) return;
+        if (_bloqueado)
+            return;
 
-        if (EstaEnSuelo())
-        {
-            rb.AddForce(
-                Vector3.up * fuerzaSaltoActual,
-                ForceMode.Impulse
-            );
+        // Evitar pulsaciones demasiado seguidas.
+        if (Time.time - ultimoSalto < intervaloEntreSaltos)
+            return;
 
-            OnSaltoRealizado?.Invoke();
-        }
+        // No permitir otro salto mientras asciende.
+        if (rb.velocity.y > 0.1f)
+            return;
+
+        if (!EstaEnSuelo())
+            return;
+
+        ultimoSalto = Time.time;
+
+        rb.AddForce(
+            Vector3.up * fuerzaSaltoActual,
+            ForceMode.Impulse
+        );
+
+        OnSaltoRealizado?.Invoke();
     }
+
 
     public void ActivarSigilo(bool activo)
     {
@@ -291,13 +304,49 @@ public class MovimientoPersonaje : MonoBehaviour
         velocidadActual = velocidadBase * factor;
     }
 
+
     public bool EstaEnSuelo()
     {
-        Vector3 origen = _capsule.bounds.center;
-        float radio = _capsule.radius * 0.9f;
-        float distancia = _capsule.bounds.extents.y + 0.1f;
-        return Physics.SphereCast(origen, radio, Vector3.down, out _, distancia, layerSuelo);
+        if (_capsule == null || !_capsule.enabled)
+            return false;
+
+        Bounds bounds = _capsule.bounds;
+
+        // Radio adaptado al tamaño actual del collider.
+        float radio = Mathf.Min(
+            bounds.extents.x,
+            bounds.extents.z
+        ) * 0.85f;
+
+        if (radio <= 0f)
+            return false;
+
+        Vector3 origen = bounds.center;
+
+        // El SphereCast llega ligeramente debajo de los pies.
+        float distancia = bounds.extents.y - radio + 0.12f;
+
+        if (Physics.SphereCast(
+            origen,
+            radio,
+            Vector3.down,
+            out RaycastHit hit,
+            distancia,
+            layerSuelo,
+            QueryTriggerInteraction.Ignore))
+        {
+            // No considerar paredes como suelo.
+            float angulo = Vector3.Angle(
+                hit.normal,
+                Vector3.up
+            );
+
+            return angulo <= anguloMaximoPendiente;
+        }
+
+        return false;
     }
+
 
 
     private bool DetectarPendiente(out RaycastHit hit)
