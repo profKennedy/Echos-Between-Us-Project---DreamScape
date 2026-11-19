@@ -75,32 +75,31 @@ public class ControladorAnimacionesDani : MonoBehaviour
             enMovimiento ? 1 : 0
         );
 
+
         // CONTROL DEL SALTO
         if (_saltoActivo)
         {
-            // Confirmar que Dany despegó del suelo.
-            if (!enSuelo)
+            float tiempoDesdeSalto = Time.time - _tiempoInicioSalto;
+
+            // Detectar despegue por velocidad vertical o
+            // porque Dani ya no está tocando el suelo.
+            if (!enSuelo || _movimiento.rb.velocity.y > 0.1f)
             {
                 _despegoDelSuelo = true;
             }
 
-            // Finalizar cuando aterriza después de despegar.
-            if (_despegoDelSuelo && enSuelo &&
-                Time.time - _tiempoInicioSalto >= TiempoMinimoSalto)
+            // Finalizar solo cuando ya despegó,
+            // aterrizó y no está ascendiendo.
+            if (_despegoDelSuelo &&
+                enSuelo &&
+                _movimiento.rb.velocity.y <= 0.1f &&
+                tiempoDesdeSalto >= TiempoMinimoSalto)
             {
                 _saltoActivo = false;
                 _despegoDelSuelo = false;
             }
-
-            // Protección ante detecciones de suelo que no registren
-            // correctamente el instante de despegue.
-            if (!_despegoDelSuelo &&
-                enSuelo &&
-                Time.time - _tiempoInicioSalto > 0.3f)
-            {
-                _saltoActivo = false;
-            }
         }
+
 
         // Actualizar Animator.
         _animator.SetBool(EstaSaltando, _saltoActivo);
@@ -180,5 +179,10 @@ public class ControladorAnimacionesDani : MonoBehaviour
                 // el bloqueo de movimiento en FLASHBACK lo maneja MovimientoPersonaje
                 break;
         }
+    }
+
+    public void LimpiarTriggerRecoger()
+    {
+        _animator.ResetTrigger(Recoger);
     }
 }

@@ -7,6 +7,7 @@ public class InteraccionPersonaje : MonoBehaviour
 {
     public float radioDeteccion = 2f;
     public LayerMask layerInteractuable;
+    private ControladorAnimacionesDani _animaciones;
     private MovimientoPersonaje _movimiento;
     private bool _recogiendoObjeto = false;
     [Header("Orientación al recoger objetos")]
@@ -27,12 +28,17 @@ public class InteraccionPersonaje : MonoBehaviour
     {
         _jugador = GetComponent<ControladorPersonaje>();
         _movimiento = GetComponent<MovimientoPersonaje>();
+        _animaciones = GetComponent<ControladorAnimacionesDani>();
     }
 
     private void Update()
     {
-        // Si el objeto fue destruido (Destroy), la referencia a la interfaz NO es null de C#
-        if (!EstaVivo(_objetoCercanoActual)) _objetoCercanoActual = null;
+        // No cambiar de objeto mientras se está recogiendo.
+        if (_recogiendoObjeto)
+            return;
+
+        if (!EstaVivo(_objetoCercanoActual))
+            _objetoCercanoActual = null;
 
         IInteractable nuevo = BuscarMasCercano();
 
@@ -40,6 +46,7 @@ public class InteraccionPersonaje : MonoBehaviour
         {
             _objetoCercanoActual?.MostrarPista(false);
             nuevo?.MostrarPista(true);
+
             _objetoCercanoActual = nuevo;
         }
     }
@@ -113,13 +120,21 @@ public class InteraccionPersonaje : MonoBehaviour
         return !(interactable is UnityEngine.Object objeto) || objeto != null;
     }
 
+
     public void IntentarInteractuar()
     {
-        if (!EstaVivo(_objetoCercanoActual)) return;
+        // No permitir otra interacción mientras Dani recoge.
+        if (_recogiendoObjeto)
+            return;
 
-        // Si es un objeto que se levanta, primero hacemos la animación.
+        if (!EstaVivo(_objetoCercanoActual))
+            return;
+
+        // Si es un objeto que se levanta,
+        // primero reproducimos la animación.
         if (_objetoCercanoActual is IObjetoLevantable)
         {
+            // Bloqueamos nuevas interacciones inmediatamente.
             _recogiendoObjeto = true;
 
             // Detener y bloquear el movimiento.
@@ -128,27 +143,27 @@ public class InteraccionPersonaje : MonoBehaviour
             // Guardar el objeto pendiente.
             _interaccionPendiente = _objetoCercanoActual;
 
-            // Obtener el Transform del objeto.
-            // Esta conversión funciona si el objeto interactuable
-            // es un componente MonoBehaviour.
-            Component componenteObjeto = _objetoCercanoActual as Component;
+            Component componenteObjeto =
+                _objetoCercanoActual as Component;
 
             if (componenteObjeto != null)
             {
-                StartCoroutine(PrepararLevantamiento(componenteObjeto.transform));
+                StartCoroutine(
+                    PrepararLevantamiento(componenteObjeto.transform)
+                );
             }
             else
             {
-                // Si no tiene Transform, reproducir la animación normalmente.
                 OnLevantarObjeto?.Invoke();
             }
 
             return;
         }
 
-        // Cualquier otra interacción se ejecuta normalmente.
+        // Las demás interacciones siguen funcionando.
         _objetoCercanoActual.Interactuar(_jugador);
     }
+
 
     // Se llama desde un Animation Event (ver nota sobre el Animator en un hijo)
     public void CompletarLevantamiento()
@@ -168,11 +183,16 @@ public class InteraccionPersonaje : MonoBehaviour
 
     public void FinalizarAnimacionRecoger()
     {
-        if (!_recogiendoObjeto) return;
+        if (!_recogiendoObjeto)
+            return;
 
         _recogiendoObjeto = false;
 
-        // Dany puede volver a caminar y saltar.
+        // Limpiar cualquier Trigger pendiente.
+        if (_animaciones != null)
+            _animaciones.LimpiarTriggerRecoger();
+
+        // Permitir que Dani vuelva a moverse.
         _movimiento.Bloquear(false);
     }
 
