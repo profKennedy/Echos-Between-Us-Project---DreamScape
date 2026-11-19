@@ -1,3 +1,4 @@
+
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,14 +14,23 @@ public class DialogoInicial : MonoBehaviour
     [SerializeField] private Image imagenFadeInicio;
     [SerializeField] private float duracionFade = 2f;
 
-    [Header("Configuración del diálogo")]
+    [Header("Configuración del diálogo inicial")]
     [SerializeField]
     private string mensaje =
         "Donde estoy... ¿Mi escuela?";
 
     [SerializeField] private MovimientoPersonaje movimientoDany;
-
     [SerializeField] private float duracion = 4f;
+
+    [Header("Tutorial de controles")]
+    [SerializeField] private TutorialControles tutorialControles;
+
+    [Header("Espera antes del tutorial")]
+    [SerializeField] private float esperaTutorial = 3f;
+
+
+    private Coroutine rutinaDialogo;
+    private bool secuenciaInicialActiva;
 
     private void Start()
     {
@@ -29,16 +39,19 @@ public class DialogoInicial : MonoBehaviour
 
     private IEnumerator SecuenciaInicial()
     {
+        secuenciaInicialActiva = true;
+
         movimientoDany.Bloquear(true);
-        // Ocultar el diálogo al comenzar.
         panelDialogo.SetActive(false);
 
-        // Comenzar con la pantalla completamente negra.
+        // Comenzar con pantalla negra.
         Color color = imagenFadeInicio.color;
         color.a = 1f;
         imagenFadeInicio.color = color;
 
-        // Fade In: revelar progresivamente la escuela.
+        imagenFadeInicio.gameObject.SetActive(true);
+
+        // Fade In inicial.
         float tiempo = 0f;
 
         while (tiempo < duracionFade)
@@ -56,23 +69,60 @@ public class DialogoInicial : MonoBehaviour
             yield return null;
         }
 
-        // Asegurar transparencia total.
         color.a = 0f;
         imagenFadeInicio.color = color;
-
-        // Ocultar la imagen del Fade.
         imagenFadeInicio.gameObject.SetActive(false);
 
-        // Mostrar el diálogo de Dany.
+        // Mostrar diálogo inicial.
         textoDialogo.text = mensaje;
         panelDialogo.SetActive(true);
 
-        // Mantener el diálogo visible.
         yield return new WaitForSeconds(duracion);
 
-        // Ocultar el diálogo.
+        // Ocultar el diálogo inicial.
         panelDialogo.SetActive(false);
 
+        // Devolver el control a Dani.
         movimientoDany.Bloquear(false);
+        secuenciaInicialActiva = false;
+
+        // Esperar 3 segundos antes de mostrar el tutorial.
+        yield return new WaitForSeconds(esperaTutorial);
+
+        // Mostrar el tutorial correspondiente a la plataforma.
+        if (tutorialControles != null)
+        {
+            tutorialControles.MostrarTutorial();
+        }
+    }
+
+    // Permite mostrar nuevos diálogos
+    // reutilizando el mismo panel.
+    public void MostrarDialogo(string nuevoMensaje, float tiempo)
+    {
+        // No interrumpir la presentación inicial.
+        if (secuenciaInicialActiva)
+            return;
+
+        // Evitar que se superpongan diálogos.
+        if (rutinaDialogo != null)
+            StopCoroutine(rutinaDialogo);
+
+        rutinaDialogo = StartCoroutine(
+            RutinaMostrarDialogo(nuevoMensaje, tiempo)
+        );
+    }
+
+    private IEnumerator RutinaMostrarDialogo(
+        string nuevoMensaje,
+        float tiempo)
+    {
+        textoDialogo.text = nuevoMensaje;
+        panelDialogo.SetActive(true);
+
+        yield return new WaitForSeconds(tiempo);
+
+        panelDialogo.SetActive(false);
+        rutinaDialogo = null;
     }
 }

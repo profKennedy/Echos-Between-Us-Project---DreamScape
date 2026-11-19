@@ -24,6 +24,9 @@ public class GestionLinterna : MonoBehaviour, IObjetoLevantable, IObjetoEnMano, 
     private Rigidbody _rb;
     private Collider[] _colliders;
 
+    [Header("Linterna en el suelo")]
+    [SerializeField] private bool iniciarEncendidaEnSuelo = true;
+
     public DatosItem Datos => datosItem;
     public bool EstaEnMano => _ubicacion == UbicacionLinterna.EnMano;
     public bool EstaEnMochila => _ubicacion == UbicacionLinterna.EnMochila;
@@ -35,6 +38,18 @@ public class GestionLinterna : MonoBehaviour, IObjetoLevantable, IObjetoEnMano, 
         linterna = GetComponent<ControladorLinterna>();
         _rb = GetComponent<Rigidbody>();
         _colliders = GetComponentsInChildren<Collider>(true);
+    }
+
+    private void Start()
+    {
+        if (_ubicacion == UbicacionLinterna.EnSuelo &&
+            iniciarEncendidaEnSuelo)
+        {
+            // La linterna ilumina el vestuario
+            // sin gastar batería.
+            linterna.PermitirConsumoBateria(false);
+            linterna.Encender();
+        }
     }
 
     // Compatibilidad con scripts que ya la consultaban
@@ -80,6 +95,14 @@ public class GestionLinterna : MonoBehaviour, IObjetoLevantable, IObjetoEnMano, 
 
         // El padre original se guarda una sola vez: cuando la agarramos del suelo
         if (_ubicacion == UbicacionLinterna.EnSuelo) _padreOriginal = linterna.transform.parent;
+
+        // Al recogerla o equiparla, comienza apagada.
+        if (linterna.EstaEncendida())
+            linterna.Apagar();
+
+        // A partir de ahora, la batería se consume
+        // normalmente cuando Dani la encienda.
+        linterna.PermitirConsumoBateria(true);
 
         linterna.gameObject.SetActive(true);
         linterna.transform.SetParent(transformMano);

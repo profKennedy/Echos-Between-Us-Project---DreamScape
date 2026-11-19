@@ -82,6 +82,7 @@ public class InteraccionPersonaje : MonoBehaviour
         OnLevantarObjeto?.Invoke();
     }
 
+
     private IEnumerator GirarHaciaObjeto(Transform objetivo)
     {
         if (objetivo == null)
@@ -97,7 +98,11 @@ public class InteraccionPersonaje : MonoBehaviour
 
         Quaternion rotacionObjetivo = Quaternion.LookRotation(direccion);
 
-        while (Quaternion.Angle(rb.rotation, rotacionObjetivo) > 1f)
+        float tiempoTranscurrido = 0f;
+        float tiempoMaximoGiro = 0.5f;
+
+        while (Quaternion.Angle(rb.rotation, rotacionObjetivo) > 1f
+               && tiempoTranscurrido < tiempoMaximoGiro)
         {
             Quaternion nuevaRotacion = Quaternion.RotateTowards(
                 rb.rotation,
@@ -107,11 +112,15 @@ public class InteraccionPersonaje : MonoBehaviour
 
             rb.MoveRotation(nuevaRotacion);
 
+            tiempoTranscurrido += Time.fixedDeltaTime;
+
             yield return new WaitForFixedUpdate();
         }
 
-        rb.MoveRotation(rotacionObjetivo);
+        // No forzamos la rotación final si hay
+        // una colisión que impide completar el giro.
     }
+
 
     // Un MonoBehaviour destruido sigue siendo != null para C# cuando lo mirás como interfaz.
     private static bool EstaVivo(IInteractable interactable)

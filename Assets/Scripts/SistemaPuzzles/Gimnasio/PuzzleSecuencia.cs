@@ -58,6 +58,12 @@ public class PuzzleSecuencia : MonoBehaviour
         SeleccionarObjeto(fotografia);
     }
 
+    public void LimpiarMensaje()
+    {
+        if (textoResultado != null)
+            textoResultado.text = "";
+    }
+
     private void SeleccionarObjeto(DatosItem item)
     {
         if (completado || posicionActual >= 3)
