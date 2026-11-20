@@ -11,8 +11,8 @@ public class ReflectorEscenario : MonoBehaviour
     [SerializeField] private GameObject[] objetosAlEncender;
 
     [Header("Parpadeo al encender")]
-    [SerializeField] private float segundosParpadeo = 0.6f;
-    [SerializeField] private float intervaloParpadeo = 0.08f;
+    [SerializeField] private float segundosParpadeo = 1.5f;
+    [SerializeField] private float intervaloParpadeo = 0.12f;
 
     [Header("Audio (opcional)")]
     [SerializeField] private AudioSource audioSource;
@@ -43,15 +43,22 @@ public class ReflectorEscenario : MonoBehaviour
     private IEnumerator RutinaEncendido()
     {
         float intervalo = Mathf.Max(0.02f, intervaloParpadeo);
-        float restante = segundosParpadeo;
+        float total = Mathf.Max(intervalo, segundosParpadeo);
+        float transcurrido = 0f;
 
-        while (restante > 0f)
+        // Arranca apagado, con destellos cortos, y la luz "agarra" cada vez más seguido hasta quedar fija
+        AlternarObjetos(false);
+
+        while (transcurrido < total)
         {
-            AlternarObjetos(UnityEngine.Random.value > 0.5f);
+            float progreso = transcurrido / total;
+            float probabilidadEncendido = Mathf.Lerp(0.2f, 0.85f, progreso);
+            AlternarObjetos(UnityEngine.Random.value < probabilidadEncendido);
 
-            float espera = Mathf.Min(intervalo, restante);
+            float espera = Mathf.Min(UnityEngine.Random.Range(intervalo * 0.5f, intervalo * 1.5f), total - transcurrido);
+            espera = Mathf.Max(0.01f, espera);
             yield return new WaitForSeconds(espera);
-            restante -= espera;
+            transcurrido += espera;
         }
 
         AlternarObjetos(true);

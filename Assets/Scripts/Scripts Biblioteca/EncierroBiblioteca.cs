@@ -37,6 +37,8 @@ public class EncierroBiblioteca : MonoBehaviour
     [Header("Puzzle")]
     [SerializeField] private int librosNecesarios = 3;
     [SerializeField] private float retrasoApertura = 1f;
+    [Tooltip("Marcado: la puerta se abre sola al recoger los libros. Desmarcado: queda cerrada hasta que alguien llame a AbrirPuerta() (por ejemplo, el evento 'Al Terminar' del mensaje final del fantasma).")]
+    [SerializeField] private bool abrirPuertaAlLiberar = true;
     [Tooltip("Opcional: ID que se registra en GameProgressManager al terminar.")]
     [SerializeField] private string idPuzzle = "";
 
@@ -150,8 +152,14 @@ public class EncierroBiblioteca : MonoBehaviour
 
         yield return new WaitForSeconds(retrasoApertura);
 
-        if (puerta != null) puerta.AbrirAlCompletarPuzzle();
+        if (abrirPuertaAlLiberar) AbrirPuerta();
         alLiberar?.Invoke();
+    }
+
+    // Se puede llamar desde un UnityEvent (por ejemplo, al terminar la charla final con el fantasma)
+    public void AbrirPuerta()
+    {
+        if (puerta != null) puerta.AbrirAlCompletarPuzzle();
     }
 
     private void BloquearDani(bool bloquear)
