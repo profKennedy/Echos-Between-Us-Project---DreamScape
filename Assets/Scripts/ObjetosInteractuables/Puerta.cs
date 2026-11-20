@@ -49,6 +49,19 @@ public class Puerta : MonoBehaviour, IInteractable
     [SerializeField] private float alturaApertura = 5f;
     [SerializeField] private float velocidadApertura = 2f;
 
+    [Header("Cierre de golpe (método CerrarDeGolpe)")]
+    [Tooltip("Segundos que espera desde que se llama CerrarDeGolpe hasta que empieza a cerrarse.")]
+    [SerializeField] private float retrasoCierreGolpe = 0.2f;
+
+    [Tooltip("Bisagra: grados por segundo con los que se cierra de golpe. Acelera hasta pegar contra el marco.")]
+    [SerializeField] private float velocidadCierreGolpe = 400f;
+
+    [Tooltip("Deslizar: unidades por segundo con las que baja de golpe.")]
+    [SerializeField] private float velocidadCierreDeslizarGolpe = 30f;
+
+    [Tooltip("Se dispara cuando la puerta pega contra el marco: sonido de portazo, sacudida de cámara...")]
+    [SerializeField] private UnityEvent alCerrarseDeGolpe;
+
     [Header("UI")]
     [SerializeField] private GameObject cartelUI;
 
@@ -57,6 +70,12 @@ public class Puerta : MonoBehaviour, IInteractable
     private Vector3 _posicionCerrada;
     private Quaternion _rotacionCerrada;
     private Coroutine _animacionPuerta;
+
+    // Datos de la última apertura por bisagra: así se puede cerrar siguiendo el mismo arco
+    private Vector3 _puntoPivoteApertura;
+    private Vector3 _ejeApertura = Vector3.up;
+    private float _signoApertura = 1f;
+    private float _anguloAbierto;
 
     public void Interactuar(ControladorPersonaje jugador)
     {
@@ -175,7 +194,7 @@ public class Puerta : MonoBehaviour, IInteractable
             _animacionPuerta = StartCoroutine(RutinaBisagra(jugador));
         else
             _animacionPuerta = StartCoroutine(RutinaDeslizar());
-        
+
         alAbrirPuerta?.Invoke();
     }
 
@@ -199,9 +218,15 @@ public class Puerta : MonoBehaviour, IInteractable
         float velocidad = Mathf.Max(1f, velocidadGiro);
         float actual = 0f;
 
+        _puntoPivoteApertura = puntoPivote;
+        _ejeApertura = eje;
+        _signoApertura = signo;
+        _anguloAbierto = 0f;
+
         while (actual < objetivo)
         {
             actual = Mathf.MoveTowards(actual, objetivo, velocidad * Time.deltaTime);
+            _anguloAbierto = actual;
 
             Quaternion giro = Quaternion.AngleAxis(actual * signo, eje);
             transform.SetPositionAndRotation(
@@ -247,6 +272,69 @@ public class Puerta : MonoBehaviour, IInteractable
             yield return null;
         }
         _animacionPuerta = null;
+    }
+
+    // Cierra la puerta de golpe, como un portazo, y queda bloqueada para siempre.
+    // Se puede llamar desde un UnityEvent (por ejemplo PersecucionNiebla > Al Escapar).
+    public void CerrarDeGolpe()
+    {
+        if (!_abierta) return;
+
+        if (_animacionPuerta != null)
+            StopCoroutine(_animacionPuerta);
+
+        _animacionPuerta = StartCoroutine(RutinaCierreDeGolpe());
+    }
+
+    private IEnumerator RutinaCierreDeGolpe()
+    {
+        if (retrasoCierreGolpe > 0f)
+            yield return new WaitForSeconds(retrasoCierreGolpe);
+
+        if (tipoApertura == TipoApertura.Bisagra)
+            yield return RutinaCerrarBisagraDeGolpe();
+        else
+            yield return RutinaCerrarDeslizarDeGolpe();
+
+        transform.SetPositionAndRotation(_posicionCerrada, _rotacionCerrada);
+
+        _abierta = false;
+        bloqueadaPorMecanismo = true; // no se vuelve a abrir
+        _animacionPuerta = null;
+
+        alCerrarseDeGolpe?.Invoke();
+    }
+
+    private IEnumerator RutinaCerrarBisagraDeGolpe()
+    {
+        float anguloInicial = _anguloAbierto;
+        float duracion = Mathf.Max(0.05f, anguloInicial / Mathf.Max(1f, velocidadCierreGolpe));
+        float tiempo = 0f;
+
+        while (tiempo < duracion)
+        {
+            tiempo += Time.deltaTime;
+            float t = Mathf.Clamp01(tiempo / duracion);
+
+            // t*t: arranca lento y acelera hasta pegar contra el marco
+            float restante = anguloInicial * (1f - t * t);
+
+            Quaternion giro = Quaternion.AngleAxis(restante * _signoApertura, _ejeApertura);
+            transform.SetPositionAndRotation(
+                _puntoPivoteApertura + giro * (_posicionCerrada - _puntoPivoteApertura),
+                giro * _rotacionCerrada);
+
+            yield return null;
+        }
+    }
+
+    private IEnumerator RutinaCerrarDeslizarDeGolpe()
+    {
+        while (transform.position != _posicionCerrada)
+        {
+            transform.position = Vector3.MoveTowards(transform.position, _posicionCerrada, velocidadCierreDeslizarGolpe * Time.deltaTime);
+            yield return null;
+        }
     }
 
     public void AbrirAlCompletarPuzzle()

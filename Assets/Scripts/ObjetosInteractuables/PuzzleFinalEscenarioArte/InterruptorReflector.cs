@@ -10,6 +10,10 @@ public class InterruptorReflector : MonoBehaviour, IInteractable
     [Header("Qué enciende")]
     [SerializeField] private ReflectorEscenario reflector;
 
+    [Header("Plano del escenario (opcional)")]
+    [Tooltip("Si se asigna, el reflector se enciende con el plano de cámara del escenario. Vacío: se enciende sin plano, como antes.")]
+    [SerializeField] private PlanoEscenarioReflectores plano;
+
     [Header("Palanca (opcional)")]
     [Tooltip("El objeto que gira. Su pivote tiene que estar en el punto donde gira la palanca.")]
     [SerializeField] private Transform palanca;
@@ -73,8 +77,9 @@ public class InterruptorReflector : MonoBehaviour, IInteractable
             palanca.localRotation = hasta;
         }
 
-        // Recién con la palanca abajo se prende la luz
-        reflector.Encender();
+        // Recién con la palanca abajo se prende la luz (con plano de cámara, si hay)
+        if (plano != null) plano.EncenderConPlano(reflector);
+        else reflector.Encender();
     }
 
     // En la Scene view: línea amarilla del interruptor a su reflector, para no cruzar los 4 pares

@@ -130,7 +130,11 @@ public class MovimientoPersonaje : MonoBehaviour
             );
         }
 
-        if (_bloqueado) return;
+        if (_bloqueado)
+        {
+            MantenerQuieta();
+            return;
+        }
 
         // El MODO decide la dirección (3D relativa a cámara, 2D lateral, etc.).
         // MovimientoPersonaje no necesita saber cuál es: eso es el patrón Strategy.
@@ -212,45 +216,66 @@ public class MovimientoPersonaje : MonoBehaviour
         }
 
         if (!hayMovimiento && DetectarPendiente(out RaycastHit pendiente))
+            CompensarPendiente(pendiente);
+    }
+
+    // Evita que la gravedad la deslice por la pendiente.
+    private void CompensarPendiente(RaycastHit pendiente)
+    {
+        float factorGravedad = 1f;
+
+        if (efectoEncogimiento != null)
         {
-            // Evitamos que la gravedad la deslice por la pendiente.
-            float factorGravedad = 1f;
-
-            if (efectoEncogimiento != null)
-            {
-                float progreso = Mathf.InverseLerp(
-                    efectoEncogimiento.factorMinimo,
-                    1f,
-                    efectoEncogimiento.ObtenerFactorActual()
-                );
-
-                factorGravedad = Mathf.Lerp(
-                    multiplicadorGravedadMinima,
-                    1f,
-                    progreso
-                );
-            }
-
-            Vector3 gravedad = Physics.gravity * factorGravedad;
-
-            Vector3 gravedadParalela = Vector3.ProjectOnPlane(
-                gravedad,
-                pendiente.normal
+            float progreso = Mathf.InverseLerp(
+                efectoEncogimiento.factorMinimo,
+                1f,
+                efectoEncogimiento.ObtenerFactorActual()
             );
 
-            rb.AddForce(
-                -gravedadParalela,
-                ForceMode.Acceleration
+            factorGravedad = Mathf.Lerp(
+                multiplicadorGravedadMinima,
+                1f,
+                progreso
             );
         }
 
+        Vector3 gravedad = Physics.gravity * factorGravedad;
+
+        Vector3 gravedadParalela = Vector3.ProjectOnPlane(
+            gravedad,
+            pendiente.normal
+        );
+
+        rb.AddForce(
+            -gravedadParalela,
+            ForceMode.Acceleration
+        );
+    }
+
+    // Mientras Dani está bloqueada (cinemáticas, mensajes, planos de cámara) tiene que quedar PLANTADA.
+    // Antes el FixedUpdate salía sin hacer nada y en un piso inclinado se deslizaba (con la animación de caminar).
+    private void MantenerQuieta()
+    {
+        if (rb.isKinematic) return; // durante el respawn el Rigidbody es kinemático
+
+        rb.velocity = new Vector3(0f, rb.velocity.y, 0f);
+
+        if (DetectarPendiente(out RaycastHit pendiente))
+            CompensarPendiente(pendiente);
     }
 
     public void Bloquear(bool valor)
     {
         _bloqueado = valor;
-        // Si bloqueamos, frenamos: si no, el Rigidbody sigue deslizando con la última velocidad
-        if (valor) rb.velocity = new Vector3(0f, rb.velocity.y, 0f);
+
+        if (valor)
+        {
+            // Sin esto, la última dirección recibida quedaría guardada y Dani caminaría sola al desbloquearse
+            _inputMovimiento = Vector2.zero;
+
+            // Si bloqueamos, frenamos: si no, el Rigidbody sigue deslizando con la última velocidad
+            if (!rb.isKinematic) rb.velocity = new Vector3(0f, rb.velocity.y, 0f);
+        }
     }
 
 
