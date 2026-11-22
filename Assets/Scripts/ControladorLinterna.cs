@@ -46,14 +46,19 @@ public class ControladorLinterna : MonoBehaviour
         consumirBateria = permitir;
     }
 
-    public void Encender()
+    public void Encender(bool reproducirSonido = true)
     {
         if (bateriaActual > 0)
         {
             estaEncendida = true;
-            if (componenteLuz != null) componenteLuz.enabled = true;
 
-            if (audioSourceLinterna != null && sfxEncender != null)
+            if (componenteLuz != null)
+                componenteLuz.enabled = true;
+
+            // Reproducir sonido solamente cuando corresponda.
+            if (reproducirSonido &&
+                audioSourceLinterna != null &&
+                sfxEncender != null)
             {
                 audioSourceLinterna.PlayOneShot(sfxEncender);
             }
