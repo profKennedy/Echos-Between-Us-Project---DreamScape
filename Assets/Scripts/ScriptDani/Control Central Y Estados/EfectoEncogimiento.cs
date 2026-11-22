@@ -45,13 +45,13 @@ public class EfectoEncogimiento : MonoBehaviour
             Debug.LogError("EfectoEncogimiento: NivelDeAutoestima debe estar en el MISMO GameObject.", this);
             return;
         }
-        _nivelAutoestimaDani.OnAutoestimaCambiada += ActualizarTamaño;
+        //_nivelAutoestimaDani.OnAutoestimaCambiada += ActualizarTamaño;
     }
 
     private void OnDisable()
     {
         if (_nivelAutoestimaDani == null) return;
-        _nivelAutoestimaDani.OnAutoestimaCambiada -= ActualizarTamaño;
+        //_nivelAutoestimaDani.OnAutoestimaCambiada -= ActualizarTamaño;
     }
 
     private void Update()
@@ -85,7 +85,7 @@ public class EfectoEncogimiento : MonoBehaviour
             transformMesh.localScale = Vector3.one * factorEncogimientoActual;
     }
 
-    private void ActualizarTamaño(float porcentajeAutoestima)
+    /*private void ActualizarTamaño(float porcentajeAutoestima)
     {
         if (encogimientoForzado)
             return;
@@ -95,7 +95,7 @@ public class EfectoEncogimiento : MonoBehaviour
             1f,
             porcentajeAutoestima
         );
-    }
+    }*/
 
 
     public void EncogerPorPuzzle()

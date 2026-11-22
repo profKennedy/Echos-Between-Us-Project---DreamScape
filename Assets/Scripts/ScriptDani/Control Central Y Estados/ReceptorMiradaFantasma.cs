@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class ReceptorMiradaFantasma : MonoBehaviour
 {
-    [Header("Configuración")]
+    /*[Header("Configuración")]
     [SerializeField] private float perdidaPorSegundo = 15f;
     [SerializeField] private float recuperacionPorSegundo = 5f;
     [Tooltip("Cuánto tiempo sigue contando como 'mirada' después del último RecibirMirada()")]
@@ -34,5 +34,10 @@ public class ReceptorMiradaFantasma : MonoBehaviour
     public void RecibirMirada()
     {
         _tiempoUltimaMirada = Time.time;
+    }*/
+    // Se conserva por compatibilidad con otros scripts.
+    // Los fantasmas ya no aplican daño mediante la mirada.
+    public void RecibirMirada()
+    {
     }
 }

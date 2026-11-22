@@ -1,35 +1,48 @@
 using UnityEngine;
-using UnityEngine.SceneManagement; // Por si quieren reiniciar o ir al menú principal
+using UnityEngine.SceneManagement;
 
 public class MenuPausa : MonoBehaviour
 {
     [Header("UI del Menú")]
     [SerializeField] private GameObject canvasPausa;
 
+    [Header("Otras interfaces")]
+    [SerializeField] private InterfazMochila interfazMochila;
+    [SerializeField] private InterfazMobile interfazMobile;
+
     private bool _juegoPausado = false;
+
+    public bool EstaPausado => _juegoPausado;
 
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             if (_juegoPausado)
-            {
                 Reanudar();
-            }
             else
-            {
                 Pausar();
-            }
         }
     }
 
     public void Pausar()
     {
+        // No permitir abrir pausa mientras la mochila esté abierta.
+        if (_juegoPausado)
+            return;
+
+        if (interfazMochila != null && interfazMochila.EstaAbierta)
+            return;
+
         _juegoPausado = true;
 
-        if (canvasPausa != null) canvasPausa.SetActive(true);
-        Time.timeScale = 0f;
+        if (canvasPausa != null)
+            canvasPausa.SetActive(true);
 
+        if (interfazMobile != null)
+            interfazMobile.MostrarControles(false);
+
+        Time.timeScale = 0f;
         AudioListener.pause = true;
 
         Cursor.lockState = CursorLockMode.None;
@@ -40,16 +53,16 @@ public class MenuPausa : MonoBehaviour
     {
         _juegoPausado = false;
 
-        if (canvasPausa != null) canvasPausa.SetActive(false);
+        if (canvasPausa != null)
+            canvasPausa.SetActive(false);
 
         Time.timeScale = 1f;
-
-        // Despausa los sonidos
         AudioListener.pause = false;
 
-        // Opcional: Volver a bloquear el cursor si el juego lo requiere al jugar
-        // Cursor.lockState = CursorLockMode.Locked;
-        // Cursor.visible = false;
+        if (interfazMobile != null)
+            interfazMobile.MostrarControles(true);
+
+        // Conservamos el comportamiento original del cursor.
     }
 
     public void ReiniciarNivel()
@@ -57,14 +70,16 @@ public class MenuPausa : MonoBehaviour
         Time.timeScale = 1f;
         AudioListener.pause = false;
 
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        SceneManager.LoadScene(
+            SceneManager.GetActiveScene().buildIndex
+        );
     }
 
     public void SalirAlMenu(string nombreMenu)
     {
         Time.timeScale = 1f;
         AudioListener.pause = false;
+
         SceneManager.LoadScene(nombreMenu);
     }
-
 }
