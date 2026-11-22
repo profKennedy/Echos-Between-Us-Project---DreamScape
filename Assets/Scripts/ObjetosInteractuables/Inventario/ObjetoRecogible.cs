@@ -1,6 +1,7 @@
 
 using Assets.Scripts.ScriptDani.Control_Central_Y_Estados;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class ObjetoRecogible : MonoBehaviour, IObjetoLevantable
 {
@@ -13,6 +14,9 @@ public class ObjetoRecogible : MonoBehaviour, IObjetoLevantable
     [Header("Progreso (opcional)")]
     [SerializeField] private bool registrarProgreso = false;
     [SerializeField] private string idProgreso;
+
+    [Header("Evento al recoger")]
+    [SerializeField] private UnityEvent alRecoger;
 
     private bool recogido = false;
 
@@ -74,6 +78,9 @@ public class ObjetoRecogible : MonoBehaviour, IObjetoLevantable
         }
 
         MostrarPista(false);
+
+        // Ejecutar eventos especiales después de guardar el objeto.
+        alRecoger?.Invoke();
 
         Destroy(gameObject);
     }
