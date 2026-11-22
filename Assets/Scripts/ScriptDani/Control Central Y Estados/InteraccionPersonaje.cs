@@ -10,6 +10,7 @@ public class InteraccionPersonaje : MonoBehaviour
     private ControladorAnimacionesDani _animaciones;
     private MovimientoPersonaje _movimiento;
     private bool _recogiendoObjeto = false;
+    private bool _cinematicaActiva = false;
     [Header("Orientación al recoger objetos")]
     [SerializeField] private float velocidadGiroRecoger = 540f;
 
@@ -132,8 +133,9 @@ public class InteraccionPersonaje : MonoBehaviour
 
     public void IntentarInteractuar()
     {
+
         // No permitir otra interacción mientras Dani recoge.
-        if (_recogiendoObjeto)
+        if (_recogiendoObjeto || _cinematicaActiva)
             return;
 
         if (!EstaVivo(_objetoCercanoActual))
@@ -197,14 +199,31 @@ public class InteraccionPersonaje : MonoBehaviour
 
         _recogiendoObjeto = false;
 
-        // Limpiar cualquier Trigger pendiente.
         if (_animaciones != null)
             _animaciones.LimpiarTriggerRecoger();
 
-        // Permitir que Dani vuelva a moverse.
-        _movimiento.Bloquear(false);
+        // Solo devolver el movimiento si no hay
+        // una cinemática en ejecución.
+        if (!_cinematicaActiva)
+        {
+            _movimiento.Bloquear(false);
+        }
     }
 
     public void PerderLinternaPorSusto() { } // ponytail: lógica omitida hasta linkear módulo Linterna.
     public bool EsLinternaCercana() => false;
+
+    public void EstablecerBloqueoCinematica(bool bloquear)
+    {
+        _cinematicaActiva = bloquear;
+
+        if (bloquear)
+        {
+            _movimiento.Bloquear(true);
+        }
+        else if (!_recogiendoObjeto)
+        {
+            _movimiento.Bloquear(false);
+        }
+    }
 }

@@ -14,6 +14,9 @@ public class GestionLinterna : MonoBehaviour, IObjetoLevantable, IObjetoEnMano, 
     public GameObject cartelUI;     // cartel "E - Recoger"
     public Transform transformMano;
 
+    [Header("Tutorial")]
+    [SerializeField] private TutorialLinterna tutorialLinterna;
+
     [Header("Mochila")]
     [Tooltip("Asset DatosItem de la linterna: es lo que aparece en la mochila.")]
     [SerializeField] private DatosItem datosItem;
@@ -48,7 +51,7 @@ public class GestionLinterna : MonoBehaviour, IObjetoLevantable, IObjetoEnMano, 
             // La linterna ilumina el vestuario
             // sin gastar batería.
             linterna.PermitirConsumoBateria(false);
-            linterna.Encender();
+            linterna.Encender(false);
         }
     }
 
@@ -113,7 +116,15 @@ public class GestionLinterna : MonoBehaviour, IObjetoLevantable, IObjetoEnMano, 
         ActivarFisica(false);
         MostrarPista(false);
 
+        bool recogidaInicial = _ubicacion == UbicacionLinterna.EnSuelo;
+
         _ubicacion = UbicacionLinterna.EnMano;
+
+        if (recogidaInicial && tutorialLinterna != null)
+        {
+            tutorialLinterna.MostrarTutorial();
+        }
+
         Debug.Log("Linterna equipada.");
         return true;
     }

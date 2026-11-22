@@ -5,7 +5,7 @@ using Cinemachine;
 
 public class EventoEncogimientoAula : MonoBehaviour
 {
-    [Header("Presentacion del fragmento")]
+    [Header("Presentacion de la llave")]
     [SerializeField] private CinemachineVirtualCamera camaraFragmentoAula;
     [SerializeField] private float duracionPlanoFragmento = 2f;
 
@@ -13,6 +13,7 @@ public class EventoEncogimientoAula : MonoBehaviour
     [SerializeField] private EfectoEncogimiento efectoEncogimiento;
     [SerializeField] private MovimientoPersonaje movimientoDani;
     [SerializeField] private GestorEntradas gestorEntradas;
+    [SerializeField] private InteraccionPersonaje interaccionDani;
 
     [Header("Configuracion")]
     [SerializeField] private float tiempoMaximo = 5f;
@@ -28,12 +29,16 @@ public class EventoEncogimientoAula : MonoBehaviour
     [SerializeField] private CinemachineVirtualCamera camaraCinematicaAula;
     [SerializeField] private CinemachineFreeLook camaraDani;
     [SerializeField] private float esperaCambioCamara = 0.5f;
-    [SerializeField] private float esperaRegresoCamara = 0.5f;
+    [SerializeField] private float esperaRegresoCamara = 1.5f;
+
+    [Header("Camara de negatividad")]
+    [SerializeField] private CinemachineVirtualCamera camaraNegatividad;
+    [SerializeField] private float tiempoTransicionNegatividad = 1.5f;
+    [SerializeField] private float tiempoObservandoNegatividad = 2f;
+    [SerializeField] private float tiempoDesaparicionNegatividad = 3f;
 
     [Header("Final del puzzle")]
     [SerializeField] private float retrasoApertura = 1f;
-
-    [Tooltip("Opcional: ID que se registra al completar el aula.")]
     [SerializeField] private string idPuzzle = "PuzzleAula";
 
     [Header("Ambientacion del aula")]
@@ -43,8 +48,23 @@ public class EventoEncogimientoAula : MonoBehaviour
     [SerializeField] private DesvanecerObjetosAula objetosNegatividad;
 
     private bool puzzleCompletado = false;
-
     private bool eventoIniciado = false;
+    private bool cinemáticaFinalActiva = false;
+
+    private int prioridadOriginalDani;
+    private int prioridadOriginalNegatividad;
+
+    private void Start()
+    {
+        if (camaraDani != null)
+            prioridadOriginalDani = camaraDani.Priority;
+
+        if (camaraNegatividad != null)
+        {
+            prioridadOriginalNegatividad = camaraNegatividad.Priority;
+            camaraNegatividad.gameObject.SetActive(false);
+        }
+    }
 
     private void OnTriggerEnter(Collider other)
     {
@@ -70,15 +90,14 @@ public class EventoEncogimientoAula : MonoBehaviour
     {
         eventoIniciado = true;
 
-        // 1. Bloquear el movimiento de Dani.
+        // Bloquear movimiento durante el encogimiento.
         if (movimientoDani != null)
             movimientoDani.Bloquear(true);
 
-        // Desactivar entradas mientras dura la cinemática.
         if (gestorEntradas != null)
             gestorEntradas.enabled = false;
 
-        // 2. Activar la cámara cinematográfica.
+        // Mostrar camara del encogimiento.
         if (camaraCinematicaAula != null)
         {
             camaraCinematicaAula.gameObject.SetActive(true);
@@ -88,22 +107,18 @@ public class EventoEncogimientoAula : MonoBehaviour
         if (camaraDani != null)
             camaraDani.Priority = 10;
 
-        // Esperar a que Cinemachine cambie de cámara.
         yield return new WaitForSeconds(esperaCambioCamara);
 
-        // 3. Esperar antes de cerrar la puerta.
         yield return new WaitForSeconds(retrasoCierre);
 
-        // 4. Cerrar la puerta detrás de Dani.
         if (puertaAula != null)
             puertaAula.CerrarPorEvento();
 
-        // 5. Comenzar el encogimiento.
+        // Encoger a Dani.
         efectoEncogimiento.EncogerPorPuzzle();
 
         float tiempo = 0f;
 
-        // Esperar hasta que Dani termine de encogerse.
         while (
             efectoEncogimiento.ObtenerFactorActual() >
             efectoEncogimiento.factorMinimo + 0.01f &&
@@ -114,23 +129,21 @@ public class EventoEncogimientoAula : MonoBehaviour
             yield return null;
         }
 
-        // Mostrar el fragmento antes de devolver el control.
+        // Mostrar la llave de biblioteca.
         if (camaraFragmentoAula != null)
         {
             camaraFragmentoAula.gameObject.SetActive(true);
             camaraFragmentoAula.Priority = 40;
 
-            // Dejamos de mostrar la cámara del encogimiento.
             if (camaraCinematicaAula != null)
                 camaraCinematicaAula.gameObject.SetActive(false);
 
             yield return new WaitForSeconds(duracionPlanoFragmento);
 
-            // Desactivamos la cámara del fragmento.
             camaraFragmentoAula.gameObject.SetActive(false);
         }
 
-        // 6. Regresar a la cámara normal.
+        // Volver a Dani.
         if (camaraDani != null)
             camaraDani.Priority = 30;
 
@@ -138,24 +151,22 @@ public class EventoEncogimientoAula : MonoBehaviour
             camaraCinematicaAula.gameObject.SetActive(false);
 
         if (fantasmaAula != null)
-        {
             fantasmaAula.SetActive(true);
-        }
 
-        // Esperar la transición de Cinemachine.
         yield return new WaitForSeconds(esperaRegresoCamara);
 
-        // 7. Restaurar controles.
         if (gestorEntradas != null)
             gestorEntradas.enabled = true;
 
         if (movimientoDani != null)
             movimientoDani.Bloquear(false);
 
-        Debug.Log("Cinemática del aula finalizada. Dani está encogida.");
+        Debug.Log(
+            "Cinematica inicial del aula finalizada."
+        );
     }
 
-    // Lo llama el fragmento cuando Dani termina de recogerlo.
+    // Se llama al recoger la llave de biblioteca.
     public void RegistrarFragmento()
     {
         if (!eventoIniciado || puzzleCompletado)
@@ -168,45 +179,117 @@ public class EventoEncogimientoAula : MonoBehaviour
 
     private IEnumerator SecuenciaLiberacion()
     {
-        Debug.Log("Puzzle del aula completado.");
+        Debug.Log("Iniciando final del puzzle del aula.");
 
-        // 1. Desactivar el fantasma.
+        cinemáticaFinalActiva = true;
+
+        // 1. Bloquear a Dani durante la cinematica.
+        if (interaccionDani != null)
+        {
+            interaccionDani.EstablecerBloqueoCinematica(true);
+        }
+        else if (movimientoDani != null)
+        {
+            movimientoDani.Bloquear(true);
+        }
+
+        // Esperar a que termine la animacion de recoger.
+        yield return new WaitForSeconds(0.8f);
+
+        // 2. Enfocar los objetos flotantes.
+        if (camaraNegatividad != null)
+        {
+            camaraNegatividad.gameObject.SetActive(true);
+            camaraNegatividad.Priority = 50;
+        }
+
+        yield return new WaitForSeconds(
+            tiempoTransicionNegatividad
+        );
+
+        // 3. Mostrar la negatividad antes de desaparecer.
+        yield return new WaitForSeconds(
+            tiempoObservandoNegatividad
+        );
+
+        // 4. Iniciar desaparicion gradual.
+        if (objetosNegatividad != null)
+        {
+            objetosNegatividad.IniciarDesaparicion();
+        }
+
+        // Desactivar el fantasma.
         if (fantasmaAula != null)
             fantasmaAula.SetActive(false);
 
-        // Iniciar desaparición gradual de la decoración.
-        if (objetosNegatividad != null)
-            objetosNegatividad.IniciarDesaparicion();
+        // Esperar a que termine el efecto visual.
+        yield return new WaitForSeconds(
+            tiempoDesaparicionNegatividad
+        );
 
-        // 2. Dani recupera su tamaño original.
+        // 5. Dani recupera su tamaño original.
         if (efectoEncogimiento != null)
             efectoEncogimiento.RecuperarTamanoPorPuzzle();
 
-        // 3. Registrar el puzzle completado.
+        // 6. Registrar progreso.
         if (!string.IsNullOrEmpty(idPuzzle) &&
             GameProgressManager.Instancia != null)
         {
-            GameProgressManager.Instancia.RegistrarPuzzleCompletado(idPuzzle);
+            GameProgressManager.Instancia
+                .RegistrarPuzzleCompletado(idPuzzle);
         }
 
-        // 4. Esperar a que Dani recupere su tamaño.
+        // Esperar recuperacion del tamaño.
         float tiempo = 0f;
 
-        while (efectoEncogimiento != null &&
-               efectoEncogimiento.ObtenerFactorActual() < 0.99f &&
-               tiempo < 5f)
+        while (
+            efectoEncogimiento != null &&
+            efectoEncogimiento.ObtenerFactorActual() < 0.99f &&
+            tiempo < 5f
+        )
         {
             tiempo += Time.deltaTime;
             yield return null;
         }
 
-        // Pequeña pausa antes de abrir la puerta.
         yield return new WaitForSeconds(retrasoApertura);
 
-        // 5. Abrir nuevamente la puerta.
+        // 7. Abrir la puerta del aula.
         if (puertaAula != null)
             puertaAula.AbrirAlCompletarPuzzle();
 
-        Debug.Log("Dani puede salir del aula.");
+        // 8. Regresar a Dani.
+        if (camaraDani != null)
+            camaraDani.Priority = 60;
+
+        yield return new WaitForSeconds(esperaRegresoCamara);
+
+        // Restaurar prioridades.
+        if (camaraDani != null)
+            camaraDani.Priority = prioridadOriginalDani;
+
+        if (camaraNegatividad != null)
+        {
+            camaraNegatividad.Priority =
+                prioridadOriginalNegatividad;
+
+            camaraNegatividad.gameObject.SetActive(false);
+        }
+
+        // 9. Devolver controles.
+        if (interaccionDani != null)
+        {
+            interaccionDani.EstablecerBloqueoCinematica(false);
+        }
+        else if (movimientoDani != null)
+        {
+            movimientoDani.Bloquear(false);
+        }
+
+        cinemáticaFinalActiva = false;
+
+        Debug.Log(
+            "Puzzle del aula completado. Dani puede salir."
+        );
     }
 }
