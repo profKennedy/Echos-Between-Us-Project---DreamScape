@@ -13,6 +13,10 @@ public class InterfazMochila : MonoBehaviour
     [SerializeField] private Transform contenedorSlots;   // el objeto con el Grid Layout Group
     [SerializeField] private SlotMochilaUI prefabSlot;
 
+    [Header("Control de interfaces")]
+    [SerializeField] private MenuPausa menuPausa;
+    [SerializeField] private InterfazMobile interfazMobile;
+
     [Header("Detalle del item seleccionado")]
     [SerializeField] private TMP_Text textoNombre;
     [SerializeField] private TMP_Text textoDescripcion;
@@ -97,18 +101,32 @@ public class InterfazMochila : MonoBehaviour
     {
         bool abrir = !panel.activeSelf;
 
-        if (abrir && (_bloqueada || jugador.estado == EstadoPersonaje.EN_FLASHBACK)) return;
+        // No abrir mochila mientras el juego está pausado.
+        if (abrir && menuPausa != null && menuPausa.EstaPausado)
+            return;
+
+        // Respetar bloqueos existentes.
+        if (abrir && (_bloqueada ||
+            jugador.estado == EstadoPersonaje.EN_FLASHBACK))
+            return;
 
         CancelarMensaje();
+
         panel.SetActive(abrir);
 
-        // Solo se bloquea a Dani: el mundo SIGUE corriendo con la mochila abierta 
+        // Bloquear únicamente el movimiento de Dani.
+        // El mundo continúa funcionando.
         jugador.movimiento.Bloquear(abrir);
+
+        // Ocultar controles táctiles al abrir mochila.
+        if (interfazMobile != null)
+            interfazMobile.MostrarControles(!abrir);
 
         if (abrir)
         {
             _cursorPrevio = Cursor.lockState;
             _cursorVisiblePrevio = Cursor.visible;
+
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
 

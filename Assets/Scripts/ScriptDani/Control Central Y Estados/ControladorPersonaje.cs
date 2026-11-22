@@ -44,6 +44,7 @@ public class ControladorPersonaje : MonoBehaviour
         if (entradas == null || movimiento == null) return;
 
         entradas.AlMoverse += movimiento.Mover;
+        entradas.AlMoverse += InterrumpirSustoAlMoverse;
         entradas.AlSaltar += movimiento.Saltar;
         entradas.AlInteractuar += interaccion.IntentarInteractuar;
         entradas.AlAlternarLinterna += gestionLinterna.IntentarAlternarLuz;
@@ -55,6 +56,7 @@ public class ControladorPersonaje : MonoBehaviour
         if (entradas == null || movimiento == null) return;
 
         entradas.AlMoverse -= movimiento.Mover;
+        entradas.AlMoverse -= InterrumpirSustoAlMoverse;
         entradas.AlSaltar -= movimiento.Saltar;
         entradas.AlInteractuar -= interaccion.IntentarInteractuar;
         entradas.AlAlternarLinterna -= gestionLinterna.IntentarAlternarLuz;
@@ -114,6 +116,19 @@ public class ControladorPersonaje : MonoBehaviour
         CambiarEstado(EstadoPersonaje.EN_FLASHBACK);
         movimiento.Bloquear(true);
         StartCoroutine(IrAEscenaFin());
+    }
+
+    private void InterrumpirSustoAlMoverse(Vector2 direccion)
+    {
+        if (estado != EstadoPersonaje.ASUSTADA)
+            return;
+
+        // Evitar interrupciones por movimientos mínimos del joystick.
+        if (direccion.sqrMagnitude < 0.04f)
+            return;
+
+        // Cancelar la animación de susto y volver al estado normal.
+        CambiarEstado(EstadoPersonaje.LIBRE);
     }
 
     private IEnumerator IrAEscenaFin()

@@ -1,4 +1,3 @@
-
 using UnityEngine;
 
 public class InterfazMobile : MonoBehaviour
@@ -7,8 +6,16 @@ public class InterfazMobile : MonoBehaviour
 
     private void Awake()
     {
+        MostrarControles(true);
+    }
+
+    public void MostrarControles(bool mostrar)
+    {
+        if (canvasControlesMobile == null)
+            return;
+
 #if UNITY_ANDROID && !UNITY_EDITOR
-        canvasControlesMobile.SetActive(true);
+        canvasControlesMobile.SetActive(mostrar);
 #else
         canvasControlesMobile.SetActive(false);
 #endif

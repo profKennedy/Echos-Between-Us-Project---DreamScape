@@ -15,6 +15,10 @@ public class Agresor : MonoBehaviour, IAgresor
     [SerializeField] public float umbralLuzDeteccion = 15f;
     [SerializeField] private LayerMask capasObstaculo;
 
+    [Header("Detección de sigilo")]
+    [SerializeField] private float multiplicadorDeteccionSigilo = 0.5f;
+    [SerializeField] private float distanciaDeteccionCercana = 2f;
+
     [Header("Patrulla")]
     [SerializeField] private Transform[] waypoints;
     [SerializeField] private float tiempoEsperaWaypoint = 1.5f;
@@ -24,6 +28,19 @@ public class Agresor : MonoBehaviour, IAgresor
     [SerializeField] private float velocidadPersecucion = 5f;
     [SerializeField] private float tiempoMaximoAlerta = 4f;
     [SerializeField] private float distanciaAtaque = 1.2f;
+
+    [Header("Seguridad del ataque")]
+    [SerializeField] private float intervaloAtaque = 3f;
+    [SerializeField] private float distanciaSeguridad = 1.8f;
+
+    [Header("Daño a la autoestima")]
+    [SerializeField] private float danioAutoestima = 15f;
+
+    private NivelDeAutoestima autoestimaDani;
+
+    private MovimientoPersonaje movimientoDani;
+
+    private float proximoAtaque = 0f;
 
     // -------------------------------------------------------
     // ESTADO INTERNO
@@ -39,7 +56,7 @@ public class Agresor : MonoBehaviour, IAgresor
     private float timerRepelido = 0f;
     [SerializeField] private float duracionRepelido = 3f;
 
-    private ReceptorMiradaFantasma receptorDani; // Referencia al receptor de mirada del jugador,Lo agregue yo (Maci)
+    //private ReceptorMiradaFantasma receptorDani; // Referencia al receptor de mirada del jugador,Lo agregue yo (Maci)
     // -------------------------------------------------------
     // EVENTOS
     // -------------------------------------------------------
@@ -57,8 +74,10 @@ public class Agresor : MonoBehaviour, IAgresor
         ControladorPersonaje jugador = FindFirstObjectByType<ControladorPersonaje>();
         if (jugador != null)
         {
+            movimientoDani = jugador.GetComponent<MovimientoPersonaje>();
             objetivoJugador = jugador.transform;
-            receptorDani = jugador.GetComponentInChildren<ReceptorMiradaFantasma>();//ESto tambien lo agregue yo es para que pueda encoger a dani(maci)
+            autoestimaDani = jugador.GetComponentInChildren<NivelDeAutoestima>();
+            //receptorDani = jugador.GetComponentInChildren<ReceptorMiradaFantasma>();//ESto tambien lo agregue yo es para que pueda encoger a dani(maci)
         }
         else
             Debug.LogWarning("Agresor: No se encontró ControladorPersonaje en la escena.");
@@ -70,7 +89,7 @@ public class Agresor : MonoBehaviour, IAgresor
     {
         if (objetivoJugador == null) return;
         ActualizarComportamiento();
-        AplicarEfectoMirada(); //maci otra vez
+        //AplicarEfectoMirada(); //maci otra vez
     }
 
     // -------------------------------------------------------
@@ -137,22 +156,49 @@ public class Agresor : MonoBehaviour, IAgresor
 
     private void Perseguir()
     {
-        agente.SetDestination(objetivoJugador.position);
+        if (objetivoJugador == null || !agente.isOnNavMesh)
+            return;
 
-        if (Vector3.Distance(transform.position, objetivoJugador.position) <= distanciaAtaque)
+        float distancia = Vector3.Distance(
+            transform.position,
+            objetivoJugador.position
+        );
+
+        // Evitar que el agente intente ocupar
+        // constantemente la posición de Dani.
+        if (distancia <= distanciaSeguridad)
         {
-            //llamar a jugador.AlSerAsustada()
-            // Obtener el componente ControladorPersonaje del GameObject del jugador
-            ControladorPersonaje jugador = objetivoJugador.GetComponent<ControladorPersonaje>();
+            agente.isStopped = true;
+            agente.ResetPath();
+        }
+        else
+        {
+            agente.isStopped = false;
+            agente.stoppingDistance = distanciaSeguridad;
+            agente.SetDestination(objetivoJugador.position);
+        }
+
+        // Atacar solo cuando Dani está suficientemente cerca.
+        if (distancia <= distanciaAtaque &&
+            Time.time >= proximoAtaque)
+        {
+            proximoAtaque = Time.time + intervaloAtaque;
+
+            ControladorPersonaje jugador =
+                objetivoJugador.GetComponent<ControladorPersonaje>();
 
             if (jugador != null)
             {
+                // Activar animación de susto.
                 jugador.AlSerAsustada();
-                Debug.Log("¡Agresor alcanzó al jugador!");
-            }
-            else
-            {
-                Debug.LogWarning("No se encontró ControladorPersonaje en el jugador");
+
+                // Reducir autoestima sin modificar el tamaño.
+                if (autoestimaDani != null)
+                {
+                    autoestimaDani.ReducirAutoestima(danioAutoestima);
+                }
+
+                Debug.Log("El fantasma asustó a Dani y redujo su autoestima.");
             }
         }
     }
@@ -163,7 +209,7 @@ public class Agresor : MonoBehaviour, IAgresor
     }
 
     //Esta funcion la hice para que funcione lo de las miradas(maci)
-    private void AplicarEfectoMirada()
+    /*private void AplicarEfectoMirada()
     {
         if (!repelido)
         {
@@ -175,7 +221,7 @@ public class Agresor : MonoBehaviour, IAgresor
                 }
             }
         }
-    }
+    }*/
 
     // -------------------------------------------------------
     // DETECCIÓN
@@ -191,20 +237,58 @@ public class Agresor : MonoBehaviour, IAgresor
 
     public bool DetectarJugador(Vector3 posJugador)
     {
-        float distancia = Vector3.Distance(transform.position, posJugador);
-        if (distancia > radioDeteccion) return false;
+        float distancia = Vector3.Distance(
+            transform.position,
+            posJugador
+        );
 
-        Vector3 dirAlJugador = (posJugador - transform.position).normalized;
-        float angulo = Vector3.Angle(transform.forward, dirAlJugador);
-        if (angulo > anguloVision / 2f) return false;
+        float radioActual = radioDeteccion;
 
-        // Raycast que ignora al propio agresor y al jugador
-        Vector3 origen = transform.position + Vector3.up * 0.5f;
-        Ray rayo = new Ray(origen, dirAlJugador);
-
-        if (Physics.Raycast(rayo, out RaycastHit hit, distancia, capasObstaculo))
+        // El sigilo reduce el alcance visual.
+        if (movimientoDani != null && movimientoDani.enSigilo)
         {
-            // Si golpea algo que NO es el jugador, hay obstáculo
+            radioActual *= multiplicadorDeteccionSigilo;
+        }
+
+        // El fantasma siempre puede detectar a Dani
+        // si está suficientemente cerca y dentro de su visión.
+        radioActual = Mathf.Max(
+            radioActual,
+            distanciaDeteccionCercana
+        );
+
+        if (distancia > radioActual)
+            return false;
+
+        Vector3 dirAlJugador =
+            (posJugador - transform.position).normalized;
+
+        float angulo = Vector3.Angle(
+            transform.forward,
+            dirAlJugador
+        );
+
+        if (angulo > anguloVision / 2f)
+            return false;
+
+        // Comprobar si hay una pared entre el fantasma y Dani.
+        Vector3 origen =
+            transform.position + Vector3.up * 0.5f;
+
+        Vector3 destino =
+            posJugador + Vector3.up * 0.5f;
+
+        Vector3 direccion = destino - origen;
+        float distanciaRayo = direccion.magnitude;
+
+        if (Physics.Raycast(
+            origen,
+            direccion.normalized,
+            out RaycastHit hit,
+            distanciaRayo,
+            capasObstaculo
+        ))
+        {
             if (!hit.collider.CompareTag("Player"))
                 return false;
         }
@@ -223,7 +307,15 @@ public class Agresor : MonoBehaviour, IAgresor
 
     private bool JugadorEnRango()
     {
-        return Vector3.Distance(transform.position, objetivoJugador.position) <= radioDeteccion * 0.3f;
+        if (objetivoJugador == null)
+            return false;
+
+        float distancia = Vector3.Distance(
+            transform.position,
+            objetivoJugador.position
+        );
+
+        return distancia <= radioDeteccion * 1.2f;
     }
 
     // -------------------------------------------------------
@@ -237,6 +329,8 @@ public class Agresor : MonoBehaviour, IAgresor
         switch (estadoActual)
         {
             case EstadoAgresor.PATRULLANDO:
+                agente.isStopped = false;
+                agente.stoppingDistance = 0f;
                 agente.speed = velocidadPatrulla;
                 timerAlerta = 0f;
                 esperandoEnWaypoint = false; 
@@ -249,12 +343,16 @@ public class Agresor : MonoBehaviour, IAgresor
                 break;
 
             case EstadoAgresor.ALERTA:
+                agente.isStopped = false;
+                agente.stoppingDistance = 0f;
                 agente.speed = velocidadPatrulla;
                 timerAlerta = 0f;
                 OnAgresorAlerta?.Invoke();
                 break;
 
             case EstadoAgresor.PERSIGUIENDO:
+                agente.isStopped = false;
+                agente.stoppingDistance = 0f;
                 agente.speed = velocidadPersecucion;
                 OnJugadorDetectado?.Invoke();
                 break;
