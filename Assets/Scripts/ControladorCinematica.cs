@@ -9,8 +9,9 @@ public class ControladorCinematica : MonoBehaviour
     [Header("Reproductor")]
     [SerializeField] private VideoPlayer videoPlayer;
 
-    [Header("Transición")]
+    [Header("TransiciÃ³n")]
     [SerializeField] private Image imagenFadeNegro;
+    [SerializeField] private float duracionFadeEntrada = 1.5f;
     [SerializeField] private float duracionFade = 2f;
 
     [Header("Escena siguiente")]
@@ -18,11 +19,21 @@ public class ControladorCinematica : MonoBehaviour
 
     private bool cambiandoEscena = false;
     private bool fadeIniciado = false;
+    private Coroutine corrutinaFadeActual;
 
     private void Awake()
     {
         if (videoPlayer == null)
             videoPlayer = GetComponent<VideoPlayer>();
+
+        // Arranca completamente en negro antes del primer frame
+        if (imagenFadeNegro != null)
+        {
+            imagenFadeNegro.gameObject.SetActive(true);
+            Color color = imagenFadeNegro.color;
+            color.a = 1f;
+            imagenFadeNegro.color = color;
+        }
     }
 
     private void Start()
@@ -32,11 +43,6 @@ public class ControladorCinematica : MonoBehaviour
             Debug.LogError("Faltan referencias del VideoPlayer o ImagenFadeNegro.");
             return;
         }
-
-        // Empezar con la imagen transparente.
-        Color color = imagenFadeNegro.color;
-        color.a = 0f;
-        imagenFadeNegro.color = color;
 
         videoPlayer.isLooping = false;
 
@@ -49,6 +55,9 @@ public class ControladorCinematica : MonoBehaviour
     private void AlPrepararVideo(VideoPlayer reproductor)
     {
         reproductor.Play();
+
+        // Apenas empieza el video, aclara desde negro (Fade In)
+        corrutinaFadeActual = StartCoroutine(HacerFade(1f, 0f, duracionFadeEntrada));
     }
 
     private void Update()
@@ -59,7 +68,6 @@ public class ControladorCinematica : MonoBehaviour
         if (fadeIniciado || cambiandoEscena)
             return;
 
-        // Comprobar cuánto falta para terminar.
         if (videoPlayer.length > 0)
         {
             double tiempoRestante = videoPlayer.length - videoPlayer.time;
@@ -67,28 +75,32 @@ public class ControladorCinematica : MonoBehaviour
             if (videoPlayer.isPlaying && tiempoRestante <= duracionFade)
             {
                 fadeIniciado = true;
-                StartCoroutine(FadeANegro());
+
+                if (corrutinaFadeActual != null)
+                    StopCoroutine(corrutinaFadeActual);
+
+                // Al final del video, oscurece a negro (Fade Out)
+                corrutinaFadeActual = StartCoroutine(HacerFade(imagenFadeNegro.color.a, 1f, duracionFade));
             }
         }
     }
 
-    private IEnumerator FadeANegro()
+    private IEnumerator HacerFade(float alphaInicial, float alphaFinal, float duracion)
     {
         float tiempo = 0f;
-
         Color color = imagenFadeNegro.color;
 
-        while (tiempo < duracionFade)
+        while (tiempo < duracion)
         {
-            tiempo += Time.unscaledDeltaTime;
-
-            color.a = Mathf.Clamp01(tiempo / duracionFade);
+            tiempo += Mathf.Min(Time.unscaledDeltaTime, 0.05f);
+            float progreso = Mathf.Clamp01(tiempo / duracion);
+            color.a = Mathf.SmoothStep(alphaInicial, alphaFinal, progreso);
             imagenFadeNegro.color = color;
 
             yield return null;
         }
 
-        color.a = 1f;
+        color.a = alphaFinal;
         imagenFadeNegro.color = color;
     }
 
@@ -97,7 +109,6 @@ public class ControladorCinematica : MonoBehaviour
         if (cambiandoEscena) return;
 
         cambiandoEscena = true;
-
         SceneManager.LoadScene(escenaSiguiente);
     }
 
