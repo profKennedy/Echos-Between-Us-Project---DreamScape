@@ -457,12 +457,21 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_text: "<size=90><b>ECHOES BETWEEN US</b></size>\r\n\r\n\r\n<size=36>Un juego
-    de</size>\r\n<size=64><b>DreamScape</b></size>\r\n\r\n\r\n<size=44><b>Programaci\xF3n</b></size>\r\nAugusto
-    Velazquez y Maximiliano Condori\r\n\r\n\r\n<size=44><b>Dise\xF1o de niveles y
-    puzzles</b></size>\r\nAlvaro Benencia, Maximiliano Condori y agusto Velazquez\r\n\r\n\r\n<size=44><b>Arte
-    y modelado 3D</b></size>\r\nAlvaro Benencia\r\n\r\n\r\n<size=44><b>M\xFAsica
-    y sonido</b></size>\r\nYanina gonzalez y Martin Acosta\r\n\r\n\r\n<size=44><b>Agradecimientos</b></size>\r\nDocentes
-    de la Carrera, Testers y a nuestra famlia.\r\n\r\n\r\nGracias por jugar."
+    de</size>\r\n<size=64><b>DreamScape</b></size>\r\n\r\n\r\n<size=44><b>Direcci\xF3n
+    del Proyecto</b></size>\r\nAugusto Velazquez\r\nYanina Gonzalez\r\n\r\n\r\n<size=44><b>Game
+    Design</b></size>\r\n\xC1lvaro Benencia\r\nMaximiliano Condor\xED\r\nYanina Gonzalez\r\nAugusto
+    Velazquez\r\n\r\n\r\n<size=44><b>Programaci\xF3n</b></size>\r\nAugusto Velazquez\r\nMaximiliano
+    Condor\xED\r\n\r\n\r\n<size=44><b>Dise\xF1o de Niveles</b></size>\r\n\xC1lvaro
+    Benencia\r\nMaximiliano Condor\xED\r\nAugusto Velazquez\r\n\r\n\r\n<size=44><b>Arte,
+    Modelado 3D y Animaci\xF3n</b></size>\r\n\xC1lvaro Benencia\r\nMaximiliano Condor\xED\r\n\r\n\r\n<size=44><b>Arte
+    UI / UX</b></size>\r\nYanina Gonz\xE1lez\r\n\r\n\r\n<size=44><b>M\xFAsica y Dise\xF1o
+    Sonoro</b></size>\r\nYanina Gonz\xE1lez\r\nMart\xEDn Acosta\r\n\r\n\r\n<size=44><b>Marketing
+    y Comunicaci\xF3n</b></size>\r\nYanina Gonzalez\r\n\r\n\r\n<size=44><b>QA y Testing</b></size>\r\n\xC1lvaro
+    Benencia\r\nAugusto Velazquez\r\n\r\n\r\n<size=44><b>Artistas Colaboradores</b></size>\r\nAxel
+    Jurado - Ilustraci\xF3n 2D\r\nMart\xEDn Acosta - Composici\xF3n Musical\r\n\r\n\r\n<size=44><b>Agradecimientos</b></size>\r\nDocentes
+    de la Tecnicatura Universitaria en Dise\xF1o Integral de Videojuegos\r\nFacultad
+    de Ingenier\xEDa - UNJu\r\nTesters, a nuestras familias y amigos.\r\n\r\n\r\n<size=40><b>Gracias
+    por jugar.</b></size>"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
