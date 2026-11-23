@@ -17,6 +17,6 @@ MonoBehaviour:
   icono: {fileID: 0}
   prefabMundo: {fileID: 1132292790741697499, guid: 7688d0c65a6f9f54bb590a47b3e438d0,
     type: 3}
-  consumirAlUsar: 0
+  consumirAlUsar: 1
   efecto: {fileID: 0}
   textoAccion: Usar
