@@ -179,7 +179,7 @@ public class InterfazMochila : MonoBehaviour
 
         textoNombre.text = hayItem ? item.nombre : "";
         textoDescripcion.text = hayItem ? item.descripcion : "";
-        botonDescartar.interactable = hayItem;
+        botonDescartar.interactable = hayItem && mochila.PuedeDescartar(_indiceSeleccionado);
 
         // El botón de acción solo está activo si el ítem tiene un efecto (las llaves no: se usan en la puerta)
         if (botonUsar != null)
@@ -222,7 +222,9 @@ public class InterfazMochila : MonoBehaviour
 
         int indice = _indiceSeleccionado;
         _indiceSeleccionado = -1;
-        mochila.Descartar(indice);
+        if (!mochila.Descartar(indice))
+            MostrarMensaje("Este objeto no se puede soltar.");
+
         ActualizarDetalle();
     }
 

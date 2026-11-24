@@ -5,6 +5,7 @@ public class MenuPausa : MonoBehaviour
 {
     [Header("UI del Menú")]
     [SerializeField] private GameObject canvasPausa;
+    [SerializeField] private GameObject canvasOpciones;   // NUEVO
 
     [Header("Otras interfaces")]
     [SerializeField] private InterfazMochila interfazMochila;
@@ -55,6 +56,9 @@ public class MenuPausa : MonoBehaviour
 
         if (canvasPausa != null)
             canvasPausa.SetActive(false);
+
+        if (canvasOpciones != null)          // NUEVO
+            canvasOpciones.SetActive(false);
 
         Time.timeScale = 1f;
         AudioListener.pause = false;

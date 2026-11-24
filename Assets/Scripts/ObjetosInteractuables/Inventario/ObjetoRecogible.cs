@@ -1,4 +1,3 @@
-
 using Assets.Scripts.ScriptDani.Control_Central_Y_Estados;
 using UnityEngine;
 using UnityEngine.Events;
@@ -66,6 +65,9 @@ public class ObjetoRecogible : MonoBehaviour, IObjetoLevantable
         }
 
         recogido = true;
+
+        // Recordamos el tamaño real (en el mundo) para soltarlo después del mismo tamaño
+        jugador.mochila.RegistrarEscalaMundo(datos, transform.lossyScale);
 
         // Si se guardó correctamente, registramos el progreso.
         if (registrarProgreso)

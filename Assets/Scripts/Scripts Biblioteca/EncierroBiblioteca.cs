@@ -25,8 +25,12 @@ public class EncierroBiblioteca : MonoBehaviour
     [Range(0.05f, 1f)]
     [SerializeField] private float porcentajeAutoestima = 0.5f;
 
-    [Tooltip("Desmarcado: el tamaño sigue a la autoestima como siempre (50% = ~60% del tamaño). Marcado: se encoge al mínimo, como en el aula.")]
+    [Tooltip("Marcado: se encoge al mínimo, como en el aula. Desmarcado: se encoge al 'Factor En Biblioteca'.")]
     [SerializeField] private bool encogerAlMinimo;
+
+    [Tooltip("Tamaño de Dani dentro de la biblioteca cuando 'Encoger Al Minimo' está desmarcado (1 = normal, 0.2 = mínimo). El tamaño ya NO sigue a la autoestima, por eso se aplica directo.")]
+    [Range(0.2f, 1f)]
+    [SerializeField] private float factorEnBiblioteca = 0.6f;
 
     [SerializeField] private float tiempoMaximoEncogimiento = 4f;
     [SerializeField] private float pausaTrasEncoger = 0.8f;
@@ -105,7 +109,10 @@ public class EncierroBiblioteca : MonoBehaviour
 
         // 3. Zona de alta negatividad: autoestima al techo y Dani se encoge
         _encerrada = true;
+        // El tamaño ya no sigue a la autoestima (esa conexión está comentada en EfectoEncogimiento),
+        // así que hay que pedir el encogimiento explícitamente.
         if (encogerAlMinimo) efectoEncogimiento.EncogerPorPuzzle();
+        else efectoEncogimiento.AplicarPresion(1f - factorEnBiblioteca);
 
         float techo = autoestima.autoestimaMaxima * porcentajeAutoestima;
         float exceso = autoestima.autoestimaActual - techo;
@@ -143,8 +150,9 @@ public class EncierroBiblioteca : MonoBehaviour
     {
         _encerrada = false; // deja de aplicarse el techo
 
-        // Autoestima completa: el EfectoEncogimiento hace crecer a Dani solo
+        // Dani vuelve a su tamaño normal
         if (encogerAlMinimo) efectoEncogimiento.RecuperarTamanoPorPuzzle();
+        else efectoEncogimiento.IniciarRecuperacion();
         autoestima.RecuperarAutoestima(autoestima.autoestimaMaxima);
 
         if (!string.IsNullOrEmpty(idPuzzle) && GameProgressManager.Instancia != null)
