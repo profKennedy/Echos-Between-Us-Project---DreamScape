@@ -1,24 +1,25 @@
-
+// VolumenController.cs
 using UnityEngine;
 using UnityEngine.UI;
 
 public class VolumenController : MonoBehaviour
 {
-    public Slider slider;
-    public float sliderValue;
+    private const string ClaveVolumen = "volumenAudio";
 
-    void Start()
+    [SerializeField] private Slider slider;
+
+    private void Start()
     {
-        slider.value = PlayerPrefs.GetFloat("volumenAudio",0.5f);
-        AudioListener.volume = slider.value;
+        float guardado = PlayerPrefs.GetFloat(ClaveVolumen, 0.5f);
+        AudioListener.volume = guardado;
+
+        if (slider != null) slider.SetValueWithoutNotify(guardado);
+        else Debug.LogError("VolumenController: falta asignar 'Slider'.", this);
     }
 
     public void ChangeSlider(float valor)
     {
-        sliderValue = valor;
-        PlayerPrefs.SetFloat("volumenAudio", sliderValue);
-        AudioListener.volume = slider.value;
-
+        PlayerPrefs.SetFloat(ClaveVolumen, valor);
+        AudioListener.volume = valor;
     }
-
 }

@@ -15,7 +15,7 @@ MonoBehaviour:
   nombre: LLave de la Biblioteca
   descripcion: Llave que permite abrir la puerta de la biblioteca
   icono: {fileID: 21300000, guid: 457e7d8cf8b8f4044ab02409b049597c, type: 3}
-  prefabMundo: {fileID: 1132292790741697499, guid: 7688d0c65a6f9f54bb590a47b3e438d0,
+  prefabMundo: {fileID: 5069737573847823954, guid: fbb2ff3ec8584444ebf447dffafd9eac,
     type: 3}
   consumirAlUsar: 1
   efecto: {fileID: 0}

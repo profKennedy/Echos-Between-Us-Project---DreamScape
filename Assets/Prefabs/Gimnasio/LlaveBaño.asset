@@ -15,7 +15,8 @@ MonoBehaviour:
   nombre: "Llave del Ba\xF1o"
   descripcion: "Una peque\xF1a llave encontrada en el vestuario."
   icono: {fileID: 21300000, guid: 542860c1de2113548a57e5b90528d015, type: 3}
-  prefabMundo: {fileID: 0}
+  prefabMundo: {fileID: 8436394561802969687, guid: 024a1021b945911478342483db35ba04,
+    type: 3}
   consumirAlUsar: 1
   efecto: {fileID: 0}
   textoAccion: Usar

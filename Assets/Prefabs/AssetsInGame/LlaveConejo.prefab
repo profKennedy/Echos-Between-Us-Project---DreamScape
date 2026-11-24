@@ -167,4 +167,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   datos: {fileID: 11400000, guid: 5adcb713b27c325428942444f5d98099, type: 2}
-  cartelUI: {fileID: 0}
+  cartelUI: {fileID: 454367231314746672, guid: ed42492a3d88d764e925c06c14bb8edf, type: 3}
+  registrarProgreso: 0
+  idProgreso: 
+  alRecoger:
+    m_PersistentCalls:
+      m_Calls: []

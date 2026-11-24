@@ -62,6 +62,10 @@ public class Puerta : MonoBehaviour, IInteractable
     [Tooltip("Se dispara cuando la puerta pega contra el marco: sonido de portazo, sacudida de cámara...")]
     [SerializeField] private UnityEvent alCerrarseDeGolpe;
 
+    [Header("Colisión con Dani")]
+    [Tooltip("Mientras la puerta se mueve (y hasta que Dani deje de tocarla), la puerta y Dani se atraviesan. Evita que Dani quede trabada dentro de la hoja al abrir o cerrar.")]
+    [SerializeField] private bool ignorarColisionConJugadorAlMoverse = true;
+
     [Header("UI")]
     [SerializeField] private GameObject cartelUI;
 
@@ -76,6 +80,11 @@ public class Puerta : MonoBehaviour, IInteractable
     private Vector3 _ejeApertura = Vector3.up;
     private float _signoApertura = 1f;
     private float _anguloAbierto;
+
+    // Colisión puerta <-> Dani
+    private Collider[] _collidersPuerta;
+    private Collider[] _collidersJugador;
+    private Coroutine _rutinaColisiones;
 
     public void Interactuar(ControladorPersonaje jugador)
     {
@@ -123,6 +132,7 @@ public class Puerta : MonoBehaviour, IInteractable
             StopCoroutine(_animacionPuerta);
 
         _animacionPuerta = StartCoroutine(RutinaCerrarBisagra());
+        IgnorarJugadorDuranteMovimiento();
     }
 
     private IEnumerator RutinaCerrarBisagra()
@@ -194,6 +204,8 @@ public class Puerta : MonoBehaviour, IInteractable
             _animacionPuerta = StartCoroutine(RutinaBisagra(jugador));
         else
             _animacionPuerta = StartCoroutine(RutinaDeslizar());
+
+        IgnorarJugadorDuranteMovimiento();
 
         alAbrirPuerta?.Invoke();
     }
@@ -284,6 +296,7 @@ public class Puerta : MonoBehaviour, IInteractable
             StopCoroutine(_animacionPuerta);
 
         _animacionPuerta = StartCoroutine(RutinaCierreDeGolpe());
+        IgnorarJugadorDuranteMovimiento();
     }
 
     private IEnumerator RutinaCierreDeGolpe()
@@ -335,6 +348,96 @@ public class Puerta : MonoBehaviour, IInteractable
             transform.position = Vector3.MoveTowards(transform.position, _posicionCerrada, velocidadCierreDeslizarGolpe * Time.deltaTime);
             yield return null;
         }
+    }
+
+    // ---------------------------------------------------------------
+    // Colisión puerta <-> Dani
+    // La hoja se mueve por transform (no por física): si barre a Dani, el motor la empuja contra el
+    // mesh y queda trabada. Mientras la puerta se mueve no se tocan, y solo vuelven a colisionar
+    // cuando Dani ya no está pisando la puerta.
+    // ---------------------------------------------------------------
+    private void IgnorarJugadorDuranteMovimiento()
+    {
+        if (!ignorarColisionConJugadorAlMoverse) return;
+
+        if (_collidersJugador == null || _collidersJugador.Length == 0)
+        {
+            ControladorPersonaje dani = FindFirstObjectByType<ControladorPersonaje>();
+            if (dani == null) return;
+
+            _collidersJugador = dani.GetComponentsInChildren<Collider>(true);
+        }
+
+        if (_collidersPuerta == null)
+            _collidersPuerta = GetComponentsInChildren<Collider>(true);
+
+        AlternarIgnorarJugador(true);
+
+        if (_rutinaColisiones == null)
+            _rutinaColisiones = StartCoroutine(RestaurarColisionesCuandoQuedeLibre());
+    }
+
+    private IEnumerator RestaurarColisionesCuandoQuedeLibre()
+    {
+        // 1. Esperar a que la puerta termine de moverse
+        while (_animacionPuerta != null)
+            yield return null;
+
+        // 2. Esperar a que Dani no esté pisando la puerta
+        while (HayContactoConJugador())
+            yield return new WaitForSeconds(0.1f);
+
+        AlternarIgnorarJugador(false);
+        _rutinaColisiones = null;
+    }
+
+    private void AlternarIgnorarJugador(bool ignorar)
+    {
+        foreach (Collider puerta in _collidersPuerta)
+        {
+            if (puerta == null) continue;
+
+            foreach (Collider jugador in _collidersJugador)
+            {
+                if (jugador == null || jugador == puerta) continue;
+                Physics.IgnoreCollision(puerta, jugador, ignorar);
+            }
+        }
+    }
+
+    private bool HayContactoConJugador()
+    {
+        foreach (Collider puerta in _collidersPuerta)
+        {
+            if (puerta == null || !puerta.enabled || puerta.isTrigger) continue;
+
+            foreach (Collider jugador in _collidersJugador)
+            {
+                if (jugador == null || !jugador.enabled || jugador.isTrigger) continue;
+                if (SeSuperponen(puerta, jugador)) return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool SeSuperponen(Collider a, Collider b)
+    {
+        if (!a.bounds.Intersects(b.bounds)) return false;
+
+        // Si alguno no soporta el cálculo exacto, nos quedamos con el chequeo de bounds (más conservador)
+        if (!SoportaPenetracion(a) || !SoportaPenetracion(b)) return true;
+
+        return Physics.ComputePenetration(
+            a, a.transform.position, a.transform.rotation,
+            b, b.transform.position, b.transform.rotation,
+            out _, out _);
+    }
+
+    private static bool SoportaPenetracion(Collider c)
+    {
+        return c is BoxCollider || c is SphereCollider || c is CapsuleCollider
+               || (c is MeshCollider malla && malla.convex);
     }
 
     public void AbrirAlCompletarPuzzle()

@@ -1,26 +1,39 @@
-using System.Collections;
-using System.Collections.Generic;
+// BrilloController.cs
 using UnityEngine;
 using UnityEngine.UI;
 
 public class BrilloController : MonoBehaviour
 {
-    public Slider slider;
-    public float sliderValue; 
-    public Image panelBrillo;
-    // Start is called before the first frame update
-    void Start()
-    {
-        slider.value = PlayerPrefs.GetFloat("brillo", 0.5f);
-        panelBrillo.color = new Color(panelBrillo.color.r, panelBrillo.color.g, panelBrillo.color.b, slider.value);
+    public const string ClaveBrillo = "brillo";
+    public const float BrilloPorDefecto = 0.5f;
 
+    [SerializeField] private Slider slider;
+    [SerializeField] private Image panelBrillo;
+
+    private void Start()
+    {
+        if (slider == null || panelBrillo == null)
+        {
+            Debug.LogError("BrilloController: falta asignar 'Slider' o 'Panel Brillo'.", this);
+            return;
+        }
+
+        float guardado = PlayerPrefs.GetFloat(ClaveBrillo, BrilloPorDefecto);
+        slider.SetValueWithoutNotify(guardado);
+        Aplicar(guardado);
     }
 
     public void ChangeSlider(float valor)
     {
-        sliderValue = valor;
-        PlayerPrefs.SetFloat("brillo", sliderValue);
-        panelBrillo.color = new Color(panelBrillo.color.r, panelBrillo.color.g, panelBrillo.color.b, slider.value);
+        PlayerPrefs.SetFloat(ClaveBrillo, valor);
+        Aplicar(valor);
+    }
 
-    }    
+    private void Aplicar(float valor)
+    {
+        if (panelBrillo == null) return;
+        Color c = panelBrillo.color;
+        c.a = valor;
+        panelBrillo.color = c;
+    }
 }

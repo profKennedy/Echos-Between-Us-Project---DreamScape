@@ -19,6 +19,11 @@ public class InteraccionPersonaje : MonoBehaviour
 
     private IInteractable _objetoCercanoActual;
 
+    [Header("Seguridad")]
+    [Tooltip("Si la animación de recoger no termina en este tiempo (se la interrumpió un susto, por ejemplo), se cancela sola y Dani vuelve a moverse.")]
+    [SerializeField] private float tiempoMaximoRecoger = 4f;
+    private Coroutine _vigilante;
+
     // Objeto que estamos esperando recoger por animacion
     private IInteractable _interaccionPendiente;
     private ControladorPersonaje _jugador;
@@ -30,6 +35,18 @@ public class InteraccionPersonaje : MonoBehaviour
         _jugador = GetComponent<ControladorPersonaje>();
         _movimiento = GetComponent<MovimientoPersonaje>();
         _animaciones = GetComponent<ControladorAnimacionesDani>();
+    }
+
+    private void OnEnable()
+    {
+        // Un susto interrumpe la animación de recoger (el Animator pasa a "Muerte" desde Any State)
+        // y los Animation Events nunca llegan: hay que cancelar la recogida a mano.
+        if (_jugador != null) _jugador.OnPersonajeAsustado += CancelarRecogida;
+    }
+
+    private void OnDisable()
+    {
+        if (_jugador != null) _jugador.OnPersonajeAsustado -= CancelarRecogida;
     }
 
     private void Update()
@@ -141,6 +158,11 @@ public class InteraccionPersonaje : MonoBehaviour
         if (!EstaVivo(_objetoCercanoActual))
             return;
 
+        // Si Dani está asustada, apretar interactuar corta el susto (igual que moverse);
+        // si no, el trigger "Recoger" quedaría esperando dentro del estado de susto.
+        if (_jugador != null && _jugador.estado == EstadoPersonaje.ASUSTADA)
+            _jugador.CambiarEstado(EstadoPersonaje.LIBRE);
+
         // Si es un objeto que se levanta,
         // primero reproducimos la animación.
         if (_objetoCercanoActual is IObjetoLevantable)
@@ -153,6 +175,9 @@ public class InteraccionPersonaje : MonoBehaviour
 
             // Guardar el objeto pendiente.
             _interaccionPendiente = _objetoCercanoActual;
+
+            // Red de seguridad: si la animación no llega a terminar, no queda trabado para siempre.
+            _vigilante = StartCoroutine(VigilarRecogida());
 
             Component componenteObjeto =
                 _objetoCercanoActual as Component;
@@ -199,6 +224,12 @@ public class InteraccionPersonaje : MonoBehaviour
 
         _recogiendoObjeto = false;
 
+        if (_vigilante != null)
+        {
+            StopCoroutine(_vigilante);
+            _vigilante = null;
+        }
+
         if (_animaciones != null)
             _animaciones.LimpiarTriggerRecoger();
 
@@ -207,6 +238,40 @@ public class InteraccionPersonaje : MonoBehaviour
         if (!_cinematicaActiva)
         {
             _movimiento.Bloquear(false);
+        }
+    }
+
+    // Corta una recogida a medias (susto o timeout) y deja todo como antes de apretar el botón.
+    public void CancelarRecogida()
+    {
+        if (!_recogiendoObjeto)
+            return;
+
+        StopAllCoroutines();
+        _vigilante = null;
+
+        _recogiendoObjeto = false;
+        _interaccionPendiente = null;
+
+        if (_animaciones != null)
+            _animaciones.LimpiarTriggerRecoger();
+
+        if (!_cinematicaActiva)
+            _movimiento.Bloquear(false);
+
+        // Forzar que se vuelva a detectar el objeto cercano en el próximo Update
+        _objetoCercanoActual?.MostrarPista(false);
+        _objetoCercanoActual = null;
+    }
+
+    private IEnumerator VigilarRecogida()
+    {
+        yield return new WaitForSeconds(tiempoMaximoRecoger);
+
+        if (_recogiendoObjeto)
+        {
+            Debug.LogWarning("InteraccionPersonaje: la animación de recoger no terminó a tiempo. Se cancela la recogida.", this);
+            CancelarRecogida();
         }
     }
 
