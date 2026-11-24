@@ -11,8 +11,12 @@ public class PasaPaginasUI : MonoBehaviour
 
     [Header("Animación de apertura del libro")]
     public Animator animatorLibro;
-    public float esperaFadeInicial = 1.7f;      // Tiempo que espera a que termine FadeAlEntrar
-    public float duracionAnimApertura = 1.5f;   // Tiempo que tarda el libro en abrirse antes de habilitar botones
+    public float esperaFadeInicial = 1.7f; 
+    public float duracionAnimApertura = 1.5f;
+    
+    [Header("Audio")]
+    public AudioSource audioSource;
+    public AudioClip sonidoPasarPagina;  
 
     [Header("Imágenes y Texturas")]
     public Image imagenIzquierda;
@@ -138,6 +142,15 @@ public class PasaPaginasUI : MonoBehaviour
             nameof(DesbloquearBotones),
             efectoFade.duracionFade * 2.1f
         );
+    }
+
+    private void ReproducirSonidoPagina()
+    {
+        if (audioSource != null && sonidoPasarPagina != null)
+        {
+            audioSource.pitch = Random.Range(0.95f, 1.05f); 
+            audioSource.PlayOneShot(sonidoPasarPagina);
+        }
     }
 
     private void ActualizarSprites()
