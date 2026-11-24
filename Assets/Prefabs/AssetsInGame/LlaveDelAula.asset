@@ -16,7 +16,7 @@ MonoBehaviour:
   descripcion: 'Llave de la puerta que da a las aulas de Dany
 
 '
-  icono: {fileID: 21300000, guid: 5ad10f2ac8df0d745b29eb5c53555189, type: 3}
+  icono: {fileID: 21300000, guid: e48c5403bca686e46b2e6682838d2146, type: 3}
   prefabMundo: {fileID: 6687411960946082206, guid: 271a8c83f155026429a9956b85036fd0,
     type: 3}
   consumirAlUsar: 1
