@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   nombre: Llave del Teatro
   descripcion: Con esta llave va sa poder abrir las puertas del teatro
-  icono: {fileID: 0}
+  icono: {fileID: 21300000, guid: 61608d76fd24ed1448921aa449553a42, type: 3}
   prefabMundo: {fileID: 1132292790741697499, guid: 7688d0c65a6f9f54bb590a47b3e438d0,
     type: 3}
   consumirAlUsar: 1

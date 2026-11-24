@@ -9,7 +9,7 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: LlaveConejoTexture 1
   m_Shader: {fileID: 4800000, guid: 933532a4fcc9baf4fa0491de14d08ed7, type: 3}
-  m_Parent: {fileID: 2100000, guid: 46a137d93d58ad74f9244cbbc328990e, type: 2}
+  m_Parent: {fileID: 2100000, guid: 967c154dbb55a0348a7ca34f44c55c00, type: 2}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
   m_InvalidKeywords: []
@@ -38,7 +38,9 @@ Material:
     - _Glossiness: 0
     - _GlossyReflections: 0
     - _Parallax: 0.005
-    m_Colors: []
+    m_Colors:
+    - _BaseColor: {r: 0.27843142, g: 0.94509804, b: 0.40427032, a: 1}
+    - _Color: {r: 0.2784314, g: 0.945098, b: 0.4042703, a: 1}
   m_BuildTextureStacks: []
 --- !u!114 &1037242238324652011
 MonoBehaviour:

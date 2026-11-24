@@ -10161,9 +10161,9 @@ MonoBehaviour:
   panelMensaje: {fileID: 1120560563}
   textoMensaje: {fileID: 1735260261}
   jugador: {fileID: 0}
-  camaraDani: {fileID: 0}
-  interfazMochila: {fileID: 0}
-  panelControlesMobile: {fileID: 0}
+  camaraDani: {fileID: 803822313}
+  interfazMochila: {fileID: 1362970811}
+  panelControlesMobile: {fileID: 6734646385414469249}
   prioridadCamara: 70
   esperaSinBrain: 1
   esperaAntesDeHablar: 0.5
@@ -18294,7 +18294,7 @@ Mesh:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: pb_Mesh34720
+  m_Name: pb_Mesh53538
   serializedVersion: 11
   m_SubMeshes:
   - serializedVersion: 2
@@ -29648,6 +29648,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9afed0c786721814e91bfd6aaf6180e7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  sonidoAbrir: {fileID: 0}
+  sonidoPortazo: {fileID: 0}
+  volumenAbrir: 0.85
+  volumenPortazo: 1
+  variacionPitch: 0.04
+  espacial3D: 0
 --- !u!1 &485808913 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: a9cb96f43597a334bb8e9c7b4da5d054,
@@ -77820,7 +77826,7 @@ Mesh:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: pb_Mesh35890
+  m_Name: pb_Mesh54708
   serializedVersion: 11
   m_SubMeshes:
   - serializedVersion: 2
@@ -231622,7 +231628,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &2113619130
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -232441,9 +232447,9 @@ MonoBehaviour:
   panelMensaje: {fileID: 1120560563}
   textoMensaje: {fileID: 1735260261}
   jugador: {fileID: 0}
-  camaraDani: {fileID: 0}
-  interfazMochila: {fileID: 0}
-  panelControlesMobile: {fileID: 0}
+  camaraDani: {fileID: 803822313}
+  interfazMochila: {fileID: 1362970811}
+  panelControlesMobile: {fileID: 6734646385414469249}
   prioridadCamara: 70
   esperaSinBrain: 1
   esperaAntesDeHablar: 0.5
@@ -233685,9 +233691,9 @@ MonoBehaviour:
   panelMensaje: {fileID: 1120560563}
   textoMensaje: {fileID: 1735260261}
   jugador: {fileID: 0}
-  camaraDani: {fileID: 0}
-  interfazMochila: {fileID: 0}
-  panelControlesMobile: {fileID: 0}
+  camaraDani: {fileID: 803822313}
+  interfazMochila: {fileID: 1362970811}
+  panelControlesMobile: {fileID: 6734646385414469249}
   prioridadCamara: 70
   esperaSinBrain: 1
   esperaAntesDeHablar: 0.5
@@ -240226,6 +240232,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9afed0c786721814e91bfd6aaf6180e7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  sonidoAbrir: {fileID: 0}
+  sonidoPortazo: {fileID: 0}
+  volumenAbrir: 0.85
+  volumenPortazo: 1
+  variacionPitch: 0.04
+  espacial3D: 0
 --- !u!1 &6366176612169827452
 GameObject:
   m_ObjectHideFlags: 0
